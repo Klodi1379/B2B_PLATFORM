@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Generate Delivery List" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">{% trans "Generate Delivery List" %}</h1>
+        <a href="{% url 'delivery:list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>{% trans "Back to Deliveries" %}
+        </a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="post" id="generate-delivery-form">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="delivery_date" class="form-label">{% trans "Delivery Date" %}<span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="delivery_date" name="delivery_date" min="{{ today_date|date:'Y-m-d' }}" value="{{ form.delivery_date.value|date:'Y-m-d'|default:tomorrow_date|date:'Y-m-d' }}" required>
+                        {% if form.delivery_date.errors %}
+                            <div class="text-danger mt-1">{{ form.delivery_date.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="driver" class="form-label">{% trans "Driver" %}<span class="text-danger">*</span></label>
+                        <select class="form-select" id="driver" name="driver" required>
+                            <option value="">{% trans "Select Driver" %}</option>
+                            {% for driver in drivers %}
+                                <option value="{{ driver.id }}" {% if form.driver.value == driver.id %}selected{% endif %}>
+                                    {{ driver.get_full_name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.driver.errors %}
+                            <div class="text-danger mt-1">{{ form.driver.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="vehicle" class="form-label">{% trans "Vehicle" %}<span class="text-danger">*</span></label>
+                        <select class="form-select" id="vehicle" name="vehicle" required>
+                            <option value="">{% trans "Select Vehicle" %}</option>
+                            {% for vehicle in vehicles %}
+                                <option value="{{ vehicle.id }}" {% if form.vehicle.value == vehicle.id %}selected{% endif %}>
+                                    {{ vehicle.name }} ({{ vehicle.license_plate }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {% if form.vehicle.errors %}
+                            <div class="text-danger mt-1">{{ form.vehicle.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="city_filter" class="form-label">{% trans "City Filter" %}</label>
+                        <select class="form-select" id="city_filter" name="city_filter">
+                            <option value="">{% trans "All Cities" %}</option>
+                            {% for city in cities %}
+                                <option value="{{ city }}" {% if form.city_filter.value == city %}selected{% endif %}>
+                                    {{ city }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="time_slot" class="form-label">{% trans "Time Slot" %}<span class="text-danger">*</span></label>
+                        <select class="form-select" id="time_slot" name="time_slot" required>
+                            <option value="">{% trans "Select Time Slot" %}</option>
+                            <option value="MORNING" {% if form.time_slot.value == 'MORNING' %}selected{% endif %}>{% trans "Morning (8:00 - 12:00)" %}</option>
+                            <option value="AFTERNOON" {% if form.time_slot.value == 'AFTERNOON' %}selected{% endif %}>{% trans "Afternoon (12:00 - 16:00)" %}</option>
+                            <option value="EVENING" {% if form.time_slot.value == 'EVENING' %}selected{% endif %}>{% trans "Evening (16:00 - 20:00)" %}</option>
+                        </select>
+                        {% if form.time_slot.errors %}
+                            <div class="text-danger mt-1">{{ form.time_slot.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="optimize_route" name="optimize_route" {% if form.optimize_route.value %}checked{% endif %}>
+                            <label class="form-check-label" for="optimize_route">
+                                {% trans "Optimize delivery route (shortest path)" %}
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="auto_schedule" name="auto_schedule" {% if form.auto_schedule.value %}checked{% endif %}>
+                            <label class="form-check-label" for="auto_schedule">
+                                {% trans "Automatically schedule delivery (create immediately)" %}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sync me-2"></i>{% trans "Generate Delivery List" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if ready_orders %}
+        <div class="card">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{% trans "Ready Orders" %}</h5>
+                <span class="badge bg-primary">{{ ready_orders|length }} {% trans "orders" %}</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="orders-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="50">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="select-all">
+                                    </div>
+                                </th>
+                                <th>{% trans "Order #" %}</th>
+                                <th>{% trans "Shop" %}</th>
+                                <th>{% trans "Address" %}</th>
+                                <th>{% trans "City" %}</th>
+                                <th>{% trans "Items" %}</th>
+                                <th>{% trans "Weight" %}</th>
+                                <th>{% trans "Order Date" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in ready_orders %}
+                                <tr>
+                                    <td>
+                                        <div class="form-check">
+                                            <input class="form-check-input order-checkbox" type="checkbox" id="order-{{ order.id }}" value="{{ order.id }}" {% if order.id in selected_orders %}checked{% endif %}>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'suppliers:order_detail' order.id %}" class="text-primary fw-medium" target="_blank">
+                                            #{{ order.order_number }}
+                                        </a>
+                                    </td>
+                                    <td>{{ order.shop.shop_name }}</td>
+                                    <td>{{ order.shop.address }}</td>
+                                    <td>{{ order.shop.city }}</td>
+                                    <td>{{ order.items_count }}</td>
+                                    <td>{{ order.total_weight|default:"N/A" }}</td>
+                                    <td>{{ order.created_at|date:"d M Y" }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <i class="fas fa-box-open fa-2x text-muted mb-3"></i>
+                                        <p class="mb-0">{% trans "No orders ready for delivery" %}</p>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% if ready_orders %}
+                <div class="card-footer bg-white">
+                    <form method="post" action="{% url 'delivery:create_from_orders' %}" id="create-delivery-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="delivery_date" id="hidden-delivery-date">
+                        <input type="hidden" name="driver" id="hidden-driver">
+                        <input type="hidden" name="vehicle" id="hidden-vehicle">
+                        <input type="hidden" name="time_slot" id="hidden-time-slot">
+                        <input type="hidden" name="optimize_route" id="hidden-optimize-route">
+                        <input type="hidden" name="selected_orders" id="hidden-selected-orders">
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div id="selected-count">
+                                <span class="fw-medium">0</span> {% trans "orders selected" %}
+                            </div>
+                            <button type="button" id="create-delivery-btn" class="btn btn-success" disabled>
+                                <i class="fas fa-plus me-2"></i>{% trans "Create Delivery with Selected Orders" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Select all checkbox functionality
+        const selectAllCheckbox = document.getElementById('select-all');
+        const orderCheckboxes = document.querySelectorAll('.order-checkbox');
+        const selectedCountElement = document.getElementById('selected-count').querySelector('span');
+        const createDeliveryBtn = document.getElementById('create-delivery-btn');
+        
+        // Update the selected count and button state
+        function updateSelectedCount() {
+            const selectedCount = document.querySelectorAll('.order-checkbox:checked').length;
+            selectedCountElement.textContent = selectedCount;
+            createDeliveryBtn.disabled = selectedCount === 0;
+        }
+        
+        // Initialize
+        updateSelectedCount();
+        
+        // Select all checkbox
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                orderCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+                updateSelectedCount();
+            });
+        }
+        
+        // Individual checkboxes
+        orderCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                updateSelectedCount();
+                
+                // Update select all checkbox state
+                const allChecked = document.querySelectorAll('.order-checkbox:checked').length === orderCheckboxes.length;
+                selectAllCheckbox.checked = allChecked;
+                selectAllCheckbox.indeterminate = !allChecked && document.querySelectorAll('.order-checkbox:checked').length > 0;
+            });
+        });
+        
+        // Create delivery button
+        if (createDeliveryBtn) {
+            createDeliveryBtn.addEventListener('click', function() {
+                // Copy form values
+                document.getElementById('hidden-delivery-date').value = document.getElementById('delivery_date').value;
+                document.getElementById('hidden-driver').value = document.getElementById('driver').value;
+                document.getElementById('hidden-vehicle').value = document.getElementById('vehicle').value;
+                document.getElementById('hidden-time-slot').value = document.getElementById('time_slot').value;
+                document.getElementById('hidden-optimize-route').value = document.getElementById('optimize_route').checked;
+                
+                // Get selected orders
+                const selectedOrders = Array.from(document.querySelectorAll('.order-checkbox:checked')).map(checkbox => checkbox.value);
+                document.getElementById('hidden-selected-orders').value = selectedOrders.join(',');
+                
+                // Submit the form
+                document.getElementById('create-delivery-form').submit();
+            });
+        }
+        
+        // Auto-schedule checkbox logic
+        const autoScheduleCheckbox = document.getElementById('auto_schedule');
+        if (autoScheduleCheckbox) {
+            autoScheduleCheckbox.addEventListener('change', function() {
+                const generateButton = document.querySelector('#generate-delivery-form button[type="submit"]');
+                if (autoScheduleCheckbox.checked) {
+                    generateButton.innerHTML = '<i class="fas fa-calendar-plus me-2"></i>{% trans "Generate & Schedule Delivery" %}';
+                } else {
+                    generateButton.innerHTML = '<i class="fas fa-sync me-2"></i>{% trans "Generate Delivery List" %}';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

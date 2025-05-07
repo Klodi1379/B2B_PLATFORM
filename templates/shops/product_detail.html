@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ product.name }} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="mb-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'shops:dashboard' %}">{% trans "Dashboard" %}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'shops:supplier_list' %}">{% trans "Suppliers" %}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'shops:supplier_catalog' supplier.id %}">{{ supplier.company_name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-5 mb-4">
+            <div class="card h-100">
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="max-height: 300px;">
+                    {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 300px; width: 100%;">
+                            <i class="fas fa-box fa-5x text-secondary"></i>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-md-7 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h1 class="h3 mb-2">{{ product.name }}</h1>
+                    <p class="text-muted mb-3">{{ product.category.name }}</p>
+                    
+                    {% if product.discount_price %}
+                        <div class="mb-3">
+                            <span class="h4 text-success me-2">{{ product.discount_price }} ALL</span>
+                            <span class="text-muted text-decoration-line-through">{{ product.price }} ALL</span>
+                            <span class="badge bg-danger ms-2">-{{ product.get_discount_percentage }}%</span>
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <span class="h4">{{ product.price }} ALL</span>
+                        </div>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    {% if product.is_active and product.stock_quantity > 0 %}
+                        <div class="mb-3">
+                            <span class="badge bg-success me-2">{% trans "In Stock" %}</span>
+                            <span class="text-muted">{{ product.stock_quantity }} {% trans "available" %}</span>
+                        </div>
+                    {% elif product.is_active and product.stock_quantity <= 0 %}
+                        <div class="mb-3">
+                            <span class="badge bg-danger">{% trans "Out of Stock" %}</span>
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <span class="badge bg-secondary">{% trans "Unavailable" %}</span>
+                        </div>
+                    {% endif %}
+                    
+                    <p class="mb-4">{{ product.description|linebreaks }}</p>
+                    
+                    {% if product.is_active and product.stock_quantity > 0 %}
+                        <form method="post" action="{% url 'shops:add_to_cart' %}" class="d-flex gap-3 align-items-start" 
+                              hx-post="{% url 'shops:add_to_cart' %}" 
+                              hx-swap="none" 
+                              hx-trigger="submit">
+                            {% csrf_token %}
+                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                            <input type="hidden" name="supplier_id" value="{{ supplier.id }}">
+                            
+                            <div class="input-group" style="width: 150px;">
+                                <button class="btn btn-outline-secondary" type="button" id="decrease-quantity">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" class="form-control text-center" name="quantity" id="quantity" value="1" min="1" max="{{ product.stock_quantity }}">
+                                <button class="btn btn-outline-secondary" type="button" id="increase-quantity">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary" id="add-to-cart-btn">
+                                <i class="fas fa-cart-plus me-2"></i>{% trans "Add to Cart" %}
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supplier Info -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">{% trans "Supplier Information" %}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if supplier.logo %}
+                            <img src="{{ supplier.logo.url }}" alt="{{ supplier.company_name }}" class="me-3 rounded" style="width: 64px; height: 64px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center me-3" style="width: 64px; height: 64px; font-size: 24px;">
+                                {{ supplier.company_name|slice:":2"|upper }}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h5 class="mb-0">{{ supplier.company_name }}</h5>
+                            <p class="text-muted mb-0 small">{% trans "Supplier" %}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="{% url 'shops:supplier_catalog' supplier.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-th me-2"></i>{% trans "View All Products" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">{% trans "Related Products" %}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for related_product in related_products %}
+                    <div class="col-md-3 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <div class="mb-3" style="height: 120px; display: flex; align-items: center; justify-content: center;">
+                                    {% if related_product.image %}
+                                        <img src="{{ related_product.image.url }}" alt="{{ related_product.name }}" class="img-fluid" style="max-height: 120px;">
+                                    {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 100%; height: 120px;">
+                                            <i class="fas fa-box fa-2x text-secondary"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <h6 class="card-title mb-1">{{ related_product.name }}</h6>
+                                <p class="text-muted small mb-2">{{ related_product.category.name }}</p>
+                                {% if related_product.discount_price %}
+                                    <div class="mb-2">
+                                        <span class="fw-bold text-success">{{ related_product.discount_price }} ALL</span>
+                                        <span class="text-muted text-decoration-line-through small">{{ related_product.price }} ALL</span>
+                                    </div>
+                                {% else %}
+                                    <div class="mb-2">
+                                        <span class="fw-bold">{{ related_product.price }} ALL</span>
+                                    </div>
+                                {% endif %}
+                                <a href="{% url 'shops:product_detail' supplier.id related_product.id %}" class="btn btn-sm btn-outline-primary w-100">
+                                    {% trans "View Product" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12 text-center py-4">
+                        <p class="text-muted mb-0">{% trans "No related products found" %}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const quantityInput = document.getElementById('quantity');
+        const decreaseBtn = document.getElementById('decrease-quantity');
+        const increaseBtn = document.getElementById('increase-quantity');
+        const addToCartBtn = document.getElementById('add-to-cart-btn');
+        
+        // Decrease quantity
+        decreaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue > 1) {
+                quantityInput.value = currentValue - 1;
+            }
+        });
+        
+        // Increase quantity
+        increaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            let maxValue = parseInt(quantityInput.getAttribute('max'));
+            
+            if (currentValue < maxValue) {
+                quantityInput.value = currentValue + 1;
+            }
+        });
+        
+        // Validate input
+        quantityInput.addEventListener('change', function() {
+            let currentValue = parseInt(quantityInput.value);
+            let maxValue = parseInt(quantityInput.getAttribute('max'));
+            
+            if (isNaN(currentValue) || currentValue < 1) {
+                quantityInput.value = 1;
+            } else if (currentValue > maxValue) {
+                quantityInput.value = maxValue;
+            }
+        });
+        
+        // HTMX response handler
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            if (evt.detail.elt.id === 'add-to-cart-btn' && evt.detail.xhr.status === 200) {
+                // Show success message
+                const toast = document.createElement('div');
+                toast.className = 'position-fixed bottom-0 end-0 p-3';
+                toast.style.zIndex = '1050';
+                toast.innerHTML = `
+                    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header bg-success text-white">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong class="me-auto">{% trans "Success" %}</strong>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body">
+                            {% trans "Product added to cart successfully!" %}
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(toast);
+                
+                // Update cart badge
+                try {
+                    const responseData = JSON.parse(evt.detail.xhr.responseText);
+                    if (responseData.cart_count) {
+                        const cartBadge = document.getElementById('cart-badge');
+                        if (cartBadge) {
+                            cartBadge.textContent = responseData.cart_count;
+                            cartBadge.classList.remove('d-none');
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing response:', e);
+                }
+                
+                // Remove toast after 3 seconds
+                setTimeout(function() {
+                    toast.remove();
+                }, 3000);
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

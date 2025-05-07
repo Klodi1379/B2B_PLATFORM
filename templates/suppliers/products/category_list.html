@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Categories" %} | {{ supplier.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">{% translate "Product Categories" %}</h1>
+        <div>
+            <a href="{% url 'suppliers:category_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> {% translate "Add Category" %}
+            </a>
+            <a href="{% url 'suppliers:catalog_list' %}" class="btn btn-outline-secondary ms-2">
+                <i class="fas fa-box"></i> {% translate "View Products" %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-10">
+                    <div class="input-group">
+                        <input type="text" name="q" class="form-control" placeholder="{% translate 'Search categories...' %}" value="{{ query|default:'' }}">
+                        <button class="btn btn-outline-secondary" type="submit">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">{% translate "Search" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Categories List -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0">{% translate "Categories" %}</h5>
+                </div>
+                <div class="col-auto">
+                    <span class="badge bg-primary">{{ categories.count }} {% translate "categories" %}</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            {% if categories %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>{% translate "Category Name" %}</th>
+                            <th>{% translate "Parent Category" %}</th>
+                            <th>{% translate "Products" %}</th>
+                            <th class="text-end">{% translate "Actions" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="fas fa-tag fa-lg text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">{{ category.name }}</h6>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if category.parent %}
+                                {{ category.parent.name }}
+                                {% else %}
+                                <span class="text-muted">{% translate "None" %}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ category.products.count }}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'suppliers:category_detail' category.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'suppliers:category_edit' category.id %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'suppliers:category_delete' category.id %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="fas fa-tags fa-3x text-muted"></i>
+                </div>
+                <h5>{% translate "No categories found" %}</h5>
+                <p class="text-muted">
+                    {% if query %}
+                    {% translate "Try changing your search criteria" %}
+                    {% else %}
+                    {% translate "Start by adding your first category" %}
+                    {% endif %}
+                </p>
+                <a href="{% url 'suppliers:category_create' %}" class="btn btn-primary mt-2">
+                    <i class="fas fa-plus"></i> {% translate "Add Category" %}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

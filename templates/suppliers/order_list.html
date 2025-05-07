@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Porositë | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">Porositë</h1>
+        <p class="mt-2 text-gray-600">Menaxho porositë e marra nga dyqanet.</p>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="w-full md:w-1/2">
+                <form method="get" action="{% url 'suppliers:order_list' %}" class="flex w-full">
+                    <div class="relative flex-grow">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <input type="text" name="q" id="q" value="{{ request.GET.q|default:'' }}"
+                               class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-12 py-2 sm:text-sm border-gray-300 rounded-md"
+                               placeholder="Kërko sipas numrit të porosisë ose dyqanit...">
+                        {% if request.GET.q %}
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                            <a href="{% url 'suppliers:order_list' %}{% if request.GET.status %}?status={{ request.GET.status }}{% endif %}" class="text-gray-400 hover:text-gray-500">
+                                <span class="sr-only">Fshij</span>
+                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                </svg>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="ml-3 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Kërko
+                    </button>
+                </form>
+            </div>
+
+            <div class="w-full md:w-auto flex items-center space-x-4">
+                <div>
+                    <label for="status-filter" class="sr-only">Filtro sipas statusit</label>
+                    <select id="status-filter" name="status"
+                            class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                            onchange="location = this.value;">
+                        <option value="{% url 'suppliers:order_list' %}{% if request.GET.q %}?q={{ request.GET.q }}{% endif %}">Të gjitha statuset</option>
+                        <option value="{% url 'suppliers:order_list' %}?status=PENDING{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" {% if request.GET.status == 'PENDING' %}selected{% endif %}>
+                            Në pritje
+                        </option>
+                        <option value="{% url 'suppliers:order_list' %}?status=CONFIRMED{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" {% if request.GET.status == 'CONFIRMED' %}selected{% endif %}>
+                            Konfirmuar
+                        </option>
+                        <option value="{% url 'suppliers:order_list' %}?status=PROCESSING{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" {% if request.GET.status == 'PROCESSING' %}selected{% endif %}>
+                            Duke u përpunuar
+                        </option>
+                        <option value="{% url 'suppliers:order_list' %}?status=SHIPPED{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" {% if request.GET.status == 'SHIPPED' %}selected{% endif %}>
+                            Dërguar
+                        </option>
+                        <option value="{% url 'suppliers:order_list' %}?status=DELIVERED{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" {% if request.GET.status == 'DELIVERED' %}selected{% endif %}>
+                            Dorëzuar
+                        </option>
+                        <option value="{% url 'suppliers:order_list' %}?status=CANCELLED{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" {% if request.GET.status == 'CANCELLED' %}selected{% endif %}>
+                            Anuluar
+                        </option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="date-filter" class="sr-only">Filtro sipas datës</label>
+                    <select id="date-filter" name="date"
+                            class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                            onchange="location = this.value;">
+                        <option value="{% url 'suppliers:order_list' %}{% if request.GET.status %}?status={{ request.GET.status }}{% endif %}{% if request.GET.q %}{% if request.GET.status %}&{% else %}?{% endif %}q={{ request.GET.q }}{% endif %}">Të gjitha datat</option>
+                        <option value="{% url 'suppliers:order_list' %}?date=today{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" {% if request.GET.date == 'today' %}selected{% endif %}>
+                            Sot
+                        </option>
+                        <option value="{% url 'suppliers:order_list' %}?date=yesterday{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" {% if request.GET.date == 'yesterday' %}selected{% endif %}>
+                            Dje
+                        </option>
+                        <option value="{% url 'suppliers:order_list' %}?date=this_week{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" {% if request.GET.date == 'this_week' %}selected{% endif %}>
+                            Këtë javë
+                        </option>
+                        <option value="{% url 'suppliers:order_list' %}?date=this_month{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" {% if request.GET.date == 'this_month' %}selected{% endif %}>
+                            Këtë muaj
+                        </option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders List -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        {% if orders %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Porosi #
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Dyqani
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Data
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Totali
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Artikuj
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Statusi
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Veprime
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for order in orders %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <a href="{% url 'suppliers:order_detail' order.id %}" class="text-blue-600 hover:text-blue-900">
+                                        #{{ order.order_number }}
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            {% if order.shop.user.profile.avatar %}
+                                                <img class="h-10 w-10 rounded-full" src="{{ order.shop.user.profile.avatar.url }}" alt="{{ order.shop.shop_name }}">
+                                            {% else %}
+                                                <div class="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-sm font-medium">
+                                                    {{ order.shop.shop_name|slice:":2"|upper }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                {{ order.shop.shop_name }}
+                                            </div>
+                                            <div class="text-sm text-gray-500">
+                                                {{ order.shop.user.profile.phone }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ order.created_at|date:"d M Y" }}</div>
+                                    <div class="text-sm text-gray-500">{{ order.created_at|time:"H:i" }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ order.total_amount }} ALL</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ order.items_count }} artikuj
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% include "partials/status_badge.html" with status=order.status %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex justify-end space-x-2">
+                                        <a href="{% url 'suppliers:order_detail' order.id %}" class="text-blue-600 hover:text-blue-900">
+                                            Shiko
+                                        </a>
+
+                                        {% if order.status == 'PENDING' %}
+                                            <form method="post" action="{% url 'suppliers:order_update_status' order.id %}" class="inline-block">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="status" value="CONFIRMED">
+                                                <button type="submit" class="text-green-600 hover:text-green-900 ml-3">
+                                                    Konfirmo
+                                                </button>
+                                            </form>
+
+                                            <form method="post" action="{% url 'suppliers:order_update_status' order.id %}" class="inline-block">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="status" value="CANCELLED">
+                                                <button type="submit" onclick="return confirm('Jeni i sigurt që dëshironi të anuloni këtë porosi?')" class="text-red-600 hover:text-red-900 ml-3">
+                                                    Anulo
+                                                </button>
+                                            </form>
+                                        {% elif order.status == 'CONFIRMED' %}
+                                            <form method="post" action="{% url 'suppliers:order_update_status' order.id %}" class="inline-block">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="status" value="PROCESSING">
+                                                <button type="submit" class="text-indigo-600 hover:text-indigo-900 ml-3">
+                                                    Proceso
+                                                </button>
+                                            </form>
+                                        {% elif order.status == 'PROCESSING' %}
+                                            <form method="post" action="{% url 'suppliers:order_update_status' order.id %}" class="inline-block">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="status" value="SHIPPED">
+                                                <button type="submit" class="text-teal-600 hover:text-teal-900 ml-3">
+                                                    Dërgo
+                                                </button>
+                                            </form>
+                                        {% elif order.status == 'SHIPPED' %}
+                                            <form method="post" action="{% url 'suppliers:order_update_status' order.id %}" class="inline-block">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="status" value="DELIVERED">
+                                                <button type="submit" class="text-green-600 hover:text-green-900 ml-3">
+                                                    Dorëzuar
+                                                </button>
+                                            </form>
+                                        {% endif %}
+
+                                        <a href="{% url 'suppliers:order_print' order.id %}" target="_blank" class="text-gray-600 hover:text-gray-900 ml-3" title="Printo porosinë">
+                                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clip-rule="evenodd" />
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+                {% include "partials/pagination.html" with page_obj=page_obj %}
+            {% endif %}
+
+        {% else %}
+            <div class="p-6 text-center">
+                {% if request.GET.q or request.GET.status or request.GET.date %}
+                    <div class="py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Nuk u gjet asnjë porosi</h3>
+                        <p class="mt-1 text-sm text-gray-500">Provo të ndryshosh kriteret e kërkimit ose filtrave.</p>
+                        <div class="mt-6">
+                            <a href="{% url 'suppliers:order_list' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Pastro filtrat
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="py-12">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">Nuk ke ende porosi</h3>
+                        <p class="mt-1 text-sm text-gray-500">Porositë nga dyqanet do të shfaqen këtu.</p>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

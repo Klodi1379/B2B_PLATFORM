@@ -1,0 +1,90 @@
+{% if page_obj.has_other_pages %}
+<nav aria-label="Page navigation" class="mt-4">
+    <!-- Mobile pagination -->
+    <div class="d-flex justify-content-between d-md-none">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="btn btn-outline-primary">E mëparshme</a>
+        {% else %}
+            <button class="btn btn-outline-secondary" disabled>E mëparshme</button>
+        {% endif %}
+        
+        <span class="align-self-center">
+            {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+        </span>
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="btn btn-outline-primary">Tjetra</a>
+        {% else %}
+            <button class="btn btn-outline-secondary" disabled>Tjetra</button>
+        {% endif %}
+    </div>
+    
+    <!-- Desktop pagination -->
+    <ul class="pagination justify-content-center d-none d-md-flex">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" aria-label="First">
+                    <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item disabled">
+                <a class="page-link" href="#" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        {% endif %}
+        
+        <!-- Page numbers -->
+        {% with ''|center:page_obj.paginator.num_pages as range %}
+            {% for _ in range %}
+                {% with forloop.counter as i %}
+                    {% if page_obj.number == i %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ i }}</span>
+                        </li>
+                    {% elif i > page_obj.number|add:"-3" and i < page_obj.number|add:"3" %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}">{{ i }}</a>
+                        </li>
+                    {% endif %}
+                {% endwith %}
+            {% endfor %}
+        {% endwith %}
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <a class="page-link" href="#" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+            <li class="page-item disabled">
+                <a class="page-link" href="#" aria-label="Last">
+                    <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{{ category.name }} | {{ supplier.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">{% translate "Category Details" %}</h5>
+                        <div>
+                            <a href="{% url 'suppliers:category_list' %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> {% translate "Back to Categories" %}
+                            </a>
+                            <a href="{% url 'suppliers:category_edit' category.id %}" class="btn btn-sm btn-primary ms-2">
+                                <i class="fas fa-edit"></i> {% translate "Edit Category" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h3 class="mb-3">
+                                <i class="fas fa-tag text-primary me-2"></i>
+                                {{ category.name }}
+                            </h3>
+                            
+                            {% if category.parent %}
+                            <p class="mb-3">
+                                <strong>{% translate "Parent Category:" %}</strong> 
+                                <a href="{% url 'suppliers:category_detail' category.parent.id %}">{{ category.parent.name }}</a>
+                            </p>
+                            {% endif %}
+                            
+                            {% if category.description %}
+                            <div class="mb-4">
+                                <h5 class="text-primary mb-2">{% translate "Description" %}</h5>
+                                <p>{{ category.description|linebreaks }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">{% translate "Statistics" %}</h5>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span>{% translate "Products in category:" %}</span>
+                                        <span class="badge bg-primary">{{ products.count }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>{% translate "Available products:" %}</span>
+                                        <span class="badge bg-success">{{ products.filter.is_available.count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="{% url 'suppliers:category_edit' category.id %}" class="btn btn-primary">
+                                    <i class="fas fa-edit"></i> {% translate "Edit Category" %}
+                                </a>
+                                <a href="{% url 'suppliers:category_delete' category.id %}" class="btn btn-outline-danger">
+                                    <i class="fas fa-trash"></i> {% translate "Delete Category" %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Products in this category -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">{% translate "Products in this Category" %}</h5>
+                        <a href="{% url 'suppliers:product_create' %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i> {% translate "Add Product" %}
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if products %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% translate "Product" %}</th>
+                                    <th>{% translate "SKU" %}</th>
+                                    <th>{% translate "Price" %}</th>
+                                    <th>{% translate "Status" %}</th>
+                                    <th class="text-end">{% translate "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in products %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if product.image %}
+                                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="rounded me-3" style="width: 48px; height: 48px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                                <i class="fas fa-box text-secondary"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="mb-0">{{ product.name }}</h6>
+                                                <small class="text-muted">{{ product.unit }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ product.sku|default:"-" }}</td>
+                                    <td>{{ product.get_formatted_price }}</td>
+                                    <td>
+                                        {% if product.is_available %}
+                                        <span class="badge bg-success">{% translate "Available" %}</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">{% translate "Unavailable" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="{% url 'suppliers:product_detail' product.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'suppliers:product_edit' product.id %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-box fa-3x text-muted"></i>
+                        </div>
+                        <h5>{% translate "No products in this category" %}</h5>
+                        <p class="text-muted">{% translate "Add products to this category to see them here" %}</p>
+                        <a href="{% url 'suppliers:product_create' %}" class="btn btn-primary mt-2">
+                            <i class="fas fa-plus"></i> {% translate "Add Product" %}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+<div class="search-form" x-data="{ focused: false }">
+    <div class="position-relative" :class="{ 'border-primary': focused }">
+        <div class="input-group">
+            <span class="input-group-text bg-light">
+                <i class="fa fa-search text-muted"></i>
+            </span>
+            <input 
+                type="text" 
+                name="q" 
+                id="search" 
+                class="form-control border-start-0" 
+                placeholder="{{ placeholder|default:'Kërko...' }}" 
+                value="{{ request.GET.q|default:'' }}"
+                @focus="focused = true" 
+                @blur="focused = false"
+                {% if use_htmx %}
+                hx-get="{{ hx_url }}" 
+                hx-trigger="keyup changed delay:500ms, search" 
+                hx-target="{{ hx_target }}" 
+                hx-indicator="#search-indicator"
+                {% endif %}
+            >
+            {% if request.GET.q %}
+            <button 
+                type="button" 
+                class="btn btn-outline-secondary border-start-0"
+                onclick="window.location.href = window.location.pathname;">
+                <i class="fa fa-times"></i>
+                <span class="visually-hidden">Pastro kërkimin</span>
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if use_htmx %}
+    <div id="search-indicator" class="htmx-indicator text-muted small mt-2">
+        <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                <span class="visually-hidden">Duke kërkuar...</span>
+            </div>
+            Duke kërkuar...
+        </div>
+    </div>
+    {% endif %}
+</div>

@@ -1,0 +1,268 @@
+{% load i18n %}
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'users:dashboard' %}">
+            Lidhje Biznesi
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            {% if user.is_authenticated %}
+                {% if user.is_supplier %}
+                    <!-- Supplier Navigation -->
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                               href="{% url 'suppliers:dashboard' %}">
+                                <i class="fa fa-tachometer-alt"></i> {% trans "Dashboard" %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'catalog' in request.path %}active{% endif %}"
+                               href="{% url 'suppliers:catalog_list' %}">
+                                <i class="fa fa-list"></i> {% trans "Catalog" %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'orders' in request.path %}active{% endif %}"
+                               href="{% url 'suppliers:order_list' %}">
+                                <i class="fa fa-shopping-cart"></i> {% trans "Orders" %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'shops' in request.path %}active{% endif %}"
+                               href="{% url 'suppliers:shop_list' %}">
+                                <i class="fa fa-store"></i> {% trans "Shops" %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'delivery' in request.path %}active{% endif %}"
+                               href="{% url 'suppliers:delivery_list' %}">
+                                <i class="fa fa-truck"></i> {% trans "Deliveries" %}
+                            </a>
+                        </li>
+                    </ul>
+                {% elif user.is_shop %}
+                    <!-- Shop Navigation -->
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+                               href="{% url 'shops:dashboard' %}">
+                                <i class="fa fa-tachometer-alt"></i> {% trans "Dashboard" %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'suppliers' in request.path %}active{% endif %}"
+                               href="{% url 'shops:supplier_list' %}">
+                                <i class="fa fa-building"></i> {% trans "Suppliers" %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'products' in request.path and not 'suppliers' in request.path %}active{% endif %}"
+                               href="{% url 'products:product_list' %}">
+                                <i class="fa fa-box"></i> {% trans "All Products" %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'orders' in request.path %}active{% endif %}"
+                               href="{% url 'shops:order_list' %}">
+                                <i class="fa fa-shopping-cart"></i> {% trans "Orders" %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'cart' in request.path %}active{% endif %}"
+                               href="{% url 'shops:cart_view' %}">
+                                <i class="fa fa-shopping-basket"></i> {% trans "Cart" %}
+                                <span id="cart-count" class="badge bg-primary rounded-pill">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-outline-success btn-sm mt-1 mx-2" 
+                               href="{% url 'products:product_list' %}">
+                                <i class="fa fa-plus-circle"></i> {% trans "New Order" %}
+                            </a>
+                        </li>
+                    </ul>
+                {% elif user.is_driver %}
+                    <!-- Driver Navigation -->
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'today' in request.path %}active{% endif %}"
+                               href="{% url 'delivery:driver_today' %}">
+                                <i class="fa fa-calendar-day"></i> {% trans "Today's Deliveries" %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'history' in request.path %}active{% endif %}"
+                               href="{% url 'delivery:driver_history' %}">
+                                <i class="fa fa-history"></i> {% trans "Delivery History" %}
+                            </a>
+                        </li>
+                    </ul>
+                {% elif user.is_admin or user.is_staff %}
+                    <!-- Admin Navigation -->
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}"
+                               href="{% url 'users:admin_dashboard' %}">
+                                <i class="fa fa-tachometer-alt"></i> {% trans "Dashboard" %}
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if 'users' in request.path %}active{% endif %}"
+                               href="#" id="usersDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-users"></i> {% trans "Users" %}
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="usersDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin:users_user_changelist' %}">
+                                        <i class="fa fa-list me-2"></i> {% trans "All Users" %}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin:users_user_add' %}">
+                                        <i class="fa fa-user-plus me-2"></i> {% trans "Add User" %}
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin:suppliers_supplier_changelist' %}">
+                                        <i class="fa fa-building me-2"></i> {% trans "Suppliers" %}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin:shops_shop_changelist' %}">
+                                        <i class="fa fa-store me-2"></i> {% trans "Shops" %}
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if 'products' in request.path %}active{% endif %}"
+                               href="#" id="productsDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-box"></i> {% trans "Products" %}
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="productsDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin:products_product_changelist' %}">
+                                        <i class="fa fa-list me-2"></i> {% trans "All Products" %}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin:products_product_add' %}">
+                                        <i class="fa fa-plus me-2"></i> {% trans "Add Product" %}
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin:products_category_changelist' %}">
+                                        <i class="fa fa-tags me-2"></i> {% trans "Categories" %}
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle {% if 'orders' in request.path %}active{% endif %}"
+                               href="#" id="ordersDropdown" role="button"
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa fa-shopping-cart"></i> {% trans "Orders" %}
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="ordersDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin:orders_order_changelist' %}">
+                                        <i class="fa fa-list me-2"></i> {% trans "All Orders" %}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'admin:orders_order_add' %}">
+                                        <i class="fa fa-plus me-2"></i> {% trans "Create Order" %}
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'admin:index' %}">
+                                <i class="fa fa-cog"></i> {% trans "Django Admin" %}
+                            </a>
+                        </li>
+                    </ul>
+                {% endif %}
+
+                <!-- Common Navigation for All Authenticated Users -->
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'notifications:notification_list' %}">
+                            <i class="fa fa-bell"></i>
+                            <span id="notification-count" class="badge bg-danger rounded-pill">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa fa-user"></i> {{ user.get_full_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'users:profile' %}">
+                                    <i class="fa fa-id-card"></i> {% trans "Profile" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'users:password_change' %}">
+                                    <i class="fa fa-key"></i> {% trans "Change Password" %}
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'users:logout' %}">
+                                    <i class="fa fa-sign-out-alt"></i> {% trans "Logout" %}
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            {% else %}
+                <!-- Navigation for Non-Authenticated Users -->
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'common:home' %}">
+                            <i class="fa fa-home"></i> {% trans "Home" %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'common:about' %}">
+                            <i class="fa fa-info-circle"></i> {% trans "About" %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'common:faq' %}">
+                            <i class="fa fa-question-circle"></i> {% trans "FAQ" %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'common:contact' %}">
+                            <i class="fa fa-envelope"></i> {% trans "Contact" %}
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">
+                            <i class="fa fa-sign-in-alt"></i> {% trans "Login" %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'users:register' %}">
+                            <i class="fa fa-user-plus"></i> {% trans "Register" %}
+                        </a>
+                    </li>
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Update Stop Status" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    {% if user.is_supplier %}
+                        <li class="breadcrumb-item"><a href="{% url 'delivery:plan_list' %}">{% trans "Delivery Plans" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'delivery:plan_detail' plan.id %}">{{ plan.name }}</a></li>
+                    {% else %}
+                        <li class="breadcrumb-item"><a href="{% url 'delivery:driver_dashboard' %}">{% trans "Dashboard" %}</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'delivery:driver_today' %}">{% trans "Today's Deliveries" %}</a></li>
+                    {% endif %}
+                    <li class="breadcrumb-item"><a href="{% url 'delivery:stop_detail' stop.id %}">{% trans "Stop Details" %}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% trans "Update Status" %}</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ title }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Status Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.status.id_for_label }}" class="form-label">{% trans "Status" %}</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.status.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.status.help_text %}
+                                <div class="form-text">{{ form.status.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Actual Arrival Time Field -->
+                        <div class="mb-3">
+                            <label for="{{ form.actual_arrival_time.id_for_label }}" class="form-label">{% trans "Actual Arrival Time" %}</label>
+                            {{ form.actual_arrival_time }}
+                            {% if form.actual_arrival_time.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.actual_arrival_time.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.actual_arrival_time.help_text %}
+                                <div class="form-text">{{ form.actual_arrival_time.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Notes Field -->
+                        <div class="mb-4">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">{% trans "Notes" %}</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.notes.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if form.notes.help_text %}
+                                <div class="form-text">{{ form.notes.help_text }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="d-flex justify-content-between">
+                            {% if user.is_supplier %}
+                                <a href="{% url 'delivery:plan_detail' plan.id %}" class="btn btn-outline-secondary">
+                                    {% trans "Cancel" %}
+                                </a>
+                            {% else %}
+                                <a href="{% url 'delivery:stop_detail' stop.id %}" class="btn btn-outline-secondary">
+                                    {% trans "Cancel" %}
+                                </a>
+                            {% endif %}
+                            <button type="submit" class="btn btn-primary">
+                                {% trans "Update Status" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stop Information -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Stop Information" %}</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">{% trans "Shop" %}</dt>
+                        <dd class="col-sm-8">{{ stop.shop.name }}</dd>
+
+                        <dt class="col-sm-4">{% trans "Address" %}</dt>
+                        <dd class="col-sm-8">{{ stop.shop.address }}</dd>
+
+                        <dt class="col-sm-4">{% trans "Position" %}</dt>
+                        <dd class="col-sm-8">#{{ stop.position }}</dd>
+
+                        <dt class="col-sm-4">{% trans "Time Window" %}</dt>
+                        <dd class="col-sm-8">
+                            {% if stop.time_window_start and stop.time_window_end %}
+                                {{ stop.time_window_start|time:"H:i" }} - {{ stop.time_window_end|time:"H:i" }}
+                            {% else %}
+                                {% trans "No specific time window" %}
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">{% trans "Est. Arrival" %}</dt>
+                        <dd class="col-sm-8">
+                            {% if stop.estimated_arrival_time %}
+                                {{ stop.estimated_arrival_time|time:"H:i" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">{% trans "Current Status" %}</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge {% if stop.status == 'PENDING' %}bg-secondary{% elif stop.status == 'IN_PROGRESS' %}bg-primary{% elif stop.status == 'COMPLETED' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ stop.get_status_display }}
+                            </span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Delivery Details" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">{% trans "Delivery" %} #{{ delivery.id }}</h1>
+            <p class="text-muted">{{ delivery.delivery_date|date:"l, j F Y" }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'delivery:route' delivery.id %}" class="btn btn-outline-primary">
+                <i class="fas fa-route me-2"></i>{% trans "View Route" %}
+            </a>
+            <a href="{% url 'delivery:list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>{% trans "Back to Deliveries" %}
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Delivery Info -->
+        <div class="col-md-4 mb-4">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Delivery Information" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-5 fw-medium">{% trans "Status" %}</div>
+                        <div class="col-md-7 text-end">
+                            {% if delivery.status == 'PENDING' %}
+                                <span class="badge bg-secondary">{% trans "Pending" %}</span>
+                            {% elif delivery.status == 'IN_PROGRESS' %}
+                                <span class="badge bg-primary">{% trans "In Progress" %}</span>
+                            {% elif delivery.status == 'COMPLETED' %}
+                                <span class="badge bg-success">{% trans "Completed" %}</span>
+                            {% elif delivery.status == 'CANCELLED' %}
+                                <span class="badge bg-danger">{% trans "Cancelled" %}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5 fw-medium">{% trans "Date" %}</div>
+                        <div class="col-md-7 text-end">{{ delivery.delivery_date|date:"j F Y" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5 fw-medium">{% trans "Time Slot" %}</div>
+                        <div class="col-md-7 text-end">
+                            {% if delivery.time_slot == 'MORNING' %}
+                                {% trans "Morning (8:00 - 12:00)" %}
+                            {% elif delivery.time_slot == 'AFTERNOON' %}
+                                {% trans "Afternoon (12:00 - 16:00)" %}
+                            {% elif delivery.time_slot == 'EVENING' %}
+                                {% trans "Evening (16:00 - 20:00)" %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-5 fw-medium">{% trans "Created" %}</div>
+                        <div class="col-md-7 text-end">{{ delivery.created_at|date:"j F Y, H:i" }}</div>
+                    </div>
+                    {% if delivery.started_at %}
+                    <div class="row mb-3">
+                        <div class="col-md-5 fw-medium">{% trans "Started" %}</div>
+                        <div class="col-md-7 text-end">{{ delivery.started_at|date:"j F Y, H:i" }}</div>
+                    </div>
+                    {% endif %}
+                    {% if delivery.completed_at %}
+                    <div class="row mb-3">
+                        <div class="col-md-5 fw-medium">{% trans "Completed" %}</div>
+                        <div class="col-md-7 text-end">{{ delivery.completed_at|date:"j F Y, H:i" }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="row">
+                        <div class="col-md-5 fw-medium">{% trans "Orders" %}</div>
+                        <div class="col-md-7 text-end">{{ delivery.orders.count }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Driver & Vehicle -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Driver & Vehicle" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            {% if delivery.driver.profile.avatar %}
+                                <img src="{{ delivery.driver.profile.avatar.url }}" alt="{{ delivery.driver.get_full_name }}" class="rounded-circle me-3" style="width: 48px; height: 48px; object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                    {{ delivery.driver.get_initials }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-0">{{ delivery.driver.get_full_name }}</h6>
+                                <p class="text-muted mb-0 small">{% trans "Driver" %}</p>
+                            </div>
+                        </div>
+                        
+                        {% if delivery.driver.phone %}
+                        <div class="mb-2 d-flex">
+                            <span class="text-muted me-2"><i class="fas fa-phone"></i></span>
+                            <span>{{ delivery.driver.phone }}</span>
+                        </div>
+                        {% endif %}
+                        <div class="d-flex">
+                            <span class="text-muted me-2"><i class="fas fa-envelope"></i></span>
+                            <span>{{ delivery.driver.email }}</span>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                <i class="fas fa-truck text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">{{ delivery.vehicle.name }}</h6>
+                                <p class="text-muted mb-0 small">{{ delivery.vehicle.license_plate }}</p>
+                            </div>
+                        </div>
+                        <div class="mb-2 d-flex">
+                            <span class="text-muted me-2"><i class="fas fa-info-circle"></i></span>
+                            <span>{% trans "Type" %}: {{ delivery.vehicle.type }}</span>
+                        </div>
+                        {% if delivery.vehicle.capacity %}
+                        <div class="d-flex">
+                            <span class="text-muted me-2"><i class="fas fa-box"></i></span>
+                            <span>{% trans "Capacity" %}: {{ delivery.vehicle.capacity }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            {% if delivery.status == 'PENDING' %}
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Actions" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-3">
+                        <a href="{% url 'delivery:edit' delivery.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-2"></i>{% trans "Edit Delivery" %}
+                        </a>
+                        <form method="post" action="{% url 'delivery:start' delivery.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fas fa-play me-2"></i>{% trans "Start Delivery" %}
+                            </button>
+                        </form>
+                        <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelDeliveryModal">
+                            <i class="fas fa-times me-2"></i>{% trans "Cancel Delivery" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% elif delivery.status == 'IN_PROGRESS' %}
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Actions" %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'delivery:complete' delivery.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-check me-2"></i>{% trans "Mark as Completed" %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Orders -->
+        <div class="col-md-8">
+            <!-- Delivery Notes -->
+            {% if delivery.notes %}
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Delivery Notes" %}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ delivery.notes|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Orders List -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Orders to Deliver" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Order #" %}</th>
+                                    <th>{% trans "Shop" %}</th>
+                                    <th>{% trans "Address" %}</th>
+                                    <th>{% trans "Items" %}</th>
+                                    <th>{% trans "Status" %}</th>
+                                    <th class="text-end">{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in delivery.orders.all %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'suppliers:order_detail' order.id %}" class="text-primary fw-medium">
+                                                #{{ order.order_number }}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if order.shop.user.profile.avatar %}
+                                                    <img src="{{ order.shop.user.profile.avatar.url }}" alt="{{ order.shop.shop_name }}" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 12px;">
+                                                        {{ order.shop.shop_name|slice:":2"|upper }}
+                                                    </div>
+                                                {% endif %}
+                                                {{ order.shop.shop_name }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="small text-truncate" style="max-width: 200px;">
+                                                {{ order.shop.address }}
+                                                {% if order.shop.city %}
+                                                    <div>{{ order.shop.city }}{% if order.shop.postal_code %}, {{ order.shop.postal_code }}{% endif %}</div>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>{{ order.items_count }}</td>
+                                        <td>
+                                            {% if delivery.status == 'COMPLETED' %}
+                                                <span class="badge bg-success">{% trans "Delivered" %}</span>
+                                            {% elif delivery.status == 'IN_PROGRESS' %}
+                                                {% if order.delivery_status == 'PENDING' %}
+                                                    <span class="badge bg-secondary">{% trans "Pending" %}</span>
+                                                {% elif order.delivery_status == 'DELIVERED' %}
+                                                    <span class="badge bg-success">{% trans "Delivered" %}</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-secondary">{% trans "Pending" %}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-end">
+                                            {% if delivery.status == 'IN_PROGRESS' and order.delivery_status == 'PENDING' %}
+                                                <form method="post" action="{% url 'delivery:mark_order_delivered' delivery.id order.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-success">
+                                                        <i class="fas fa-check"></i> {% trans "Mark as Delivered" %}
+                                                    </button>
+                                                </form>
+                                            {% else %}
+                                                <a href="{% url 'suppliers:order_detail' order.id %}" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <p class="text-muted mb-0">{% trans "No orders assigned to this delivery" %}</p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Modal -->
+    <div class="modal fade" id="cancelDeliveryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{% trans "Confirm Cancellation" %}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>{% trans "Are you sure you want to cancel this delivery?" %}</p>
+                    <p class="text-danger">{% trans "This will release all orders assigned to this delivery." %}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "No, Keep It" %}</button>
+                    <form method="post" action="{% url 'delivery:cancel' delivery.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">{% trans "Yes, Cancel Delivery" %}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

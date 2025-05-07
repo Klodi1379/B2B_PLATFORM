@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Terms and Conditions" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="h2 text-center mb-4">{% trans "Kushtet e Përdorimit" %}</h1>
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-body p-4">
+            <p class="text-muted mb-4">{% trans "Përditësuar më:" %} 1 Maj, 2025</p>
+            
+            <h2 class="h4 mb-3">1. {% trans "Hyrje" %}</h2>
+            <p>{% trans "Mirë se vini në platformën Lidhje Biznesi. Këto Kushte të Përdorimit ('Kushtet') rregullojnë përdorimin tuaj të platformës sonë web dhe mobile, duke përfshirë çdo përmbajtje, funksionalitet dhe shërbime të ofruara në ose përmes lidhjebiznesi.al ('Platforma')." %}</p>
+            <p>{% trans "Duke përdorur Platformën, ju pranoni dhe pajtoheni të jeni të lidhur me këto Kushte dhe Politikën tonë të Privatësisë. Nëse nuk pajtoheni me këto Kushte, ju lutemi të mos e përdorni Platformën tonë." %}</p>
+            
+            <h2 class="h4 mb-3 mt-4">2. {% trans "Kush mund të përdorë Platformën" %}</h2>
+            <p>{% trans "Platforma Lidhje Biznesi është një platformë B2B (biznes-me-biznes) dhe është e disponueshme vetëm për bizneset e regjistruara ligjërisht. Për të përdorur Platformën, ju duhet:" %}</p>
+            <ul>
+                <li>{% trans "Të jeni një biznes i regjistruar ligjërisht në Shqipëri ose në vendet e tjera ku Platforma operon" %}</li>
+                <li>{% trans "Të keni të paktën 18 vjeç" %}</li>
+                <li>{% trans "Të keni autoritetin për të lidhur një marrëveshje ligjore në emër të biznesit që përfaqësoni" %}</li>
+                <li>{% trans "Të mos jeni i ndaluar nga ligji i aplikueshëm për të përdorur Platformën" %}</li>
+            </ul>
+            
+            <h2 class="h4 mb-3 mt-4">3. {% trans "Llojet e Llogarive" %}</h2>
+            <p>{% trans "Platforma Lidhje Biznesi ofron dy lloje kryesore llogarish:" %}</p>
+            <ul>
+                <li>{% trans "Llogari Dyqani: Për bizneset që dëshirojnë të blejnë produkte nga furnitorët" %}</li>
+                <li>{% trans "Llogari Furnitori: Për bizneset që dëshirojnë të shesin produkte tek dyqanet" %}</li>
+            </ul>
+            <p>{% trans "Çdo llogari ka funksionalitete dhe përgjegjësi specifike siç përshkruhet në këto Kushte." %}</p>
+            
+            <h2 class="h4 mb-3 mt-4">4. {% trans "Regjistrimi i Llogarisë dhe Siguria" %}</h2>
+            <p>{% trans "Kur regjistroheni në Platformë, ju pranoni të jepni informacion të saktë, aktual dhe të plotë për biznesin tuaj. Ju jeni përgjegjës për ruajtjen e konfidencialitetit të kredencialeve tuaja të llogarisë dhe për të gjitha aktivitetet që ndodhin nën llogarinë tuaj." %}</p>
+            <p>{% trans "Ju pranoni të na njoftoni menjëherë për çdo përdorim të paautorizuar të llogarisë suaj ose për çdo shkelje tjetër të sigurisë. Ne nuk do të jemi përgjegjës për humbjet ose dëmet që rrjedhin nga dështimi juaj për të përmbushur këto kërkesa sigurie." %}</p>
+            
+            <h2 class="h4 mb-3 mt-4">5. {% trans "Përdorimi i Platformës" %}</h2>
+            <p>{% trans "Ju pranoni të përdorni Platformën vetëm për qëllime të ligjshme dhe në përputhje me këto Kushte. Ju pranoni të mos përdorni Platformën:" %}</p>
+            <ul>
+                <li>{% trans "Në çdo mënyrë që shkel ndonjë ligj ose rregullore të aplikueshme" %}</li>
+                <li>{% trans "Për të reklamuar ose promovuar produkte të paligjshme ose të kufizuara" %}</li>
+                <li>{% trans "Për të dërguar ose ngarkuar materiale që përmbajnë viruse ose kode të tjera kompjuterike të dëmshme" %}</li>
+                <li>{% trans "Për të mbledhur ose grumbulluar informacion personal të përdoruesve të tjerë" %}</li>
+                <li>{% trans "Për të ndërhyrë në funksionimin normal të Platformës" %}</li>
+            </ul>
+            
+            <h2 class="h4 mb-3 mt-4">6. {% trans "Transaksionet dhe Pagesat" %}</h2>
+            <p>{% trans "Platforma Lidhje Biznesi lehtëson transaksionet midis dyqaneve dhe furnitorëve. Kushtet specifike të çdo transaksioni, duke përfshirë çmimet, sasitë, kushtet e pagesës dhe kushtet e dorëzimit, do të bihen dakord midis dyqanit dhe furnitorit." %}</p>
+            <p>{% trans "Ne mund të mbledhim tarifa për përdorimin e Platformës, siç përshkruhet në faqen tonë të çmimeve. Të gjitha tarifat janë të pakthyeshme, përveç nëse përcaktohet ndryshe në këto Kushte." %}</p>
+            
+            <h2 class="h4 mb-3 mt-4">7. {% trans "Të Drejtat e Pronësisë Intelektuale" %}</h2>
+            <p>{% trans "Platforma dhe përmbajtja e saj, duke përfshirë por pa u kufizuar në tekst, grafikë, logot, ikonat dhe imazhet, si dhe përzgjedhja, renditja dhe rregullimi i tyre, janë pronë ekskluzive e Lidhje Biznesi dhe mbrohen nga ligjet e të drejtave të autorit dhe pronësisë intelektuale." %}</p>
+            <p>{% trans "Ju jepet një licencë e kufizuar, jo-ekskluzive, e patransferueshme për të përdorur Platformën për qëllimet e biznesit tuaj në përputhje me këto Kushte." %}</p>
+            
+            <h2 class="h4 mb-3 mt-4">8. {% trans "Përgjegjësia e Kufizuar" %}</h2>
+            <p>{% trans "Në masën maksimale të lejuar nga ligji, Lidhje Biznesi nuk do të jetë përgjegjëse për dëme indirekte, të rastësishme, të veçanta, rrjedhimore ose ndëshkuese, duke përfshirë por pa u kufizuar në humbjen e fitimeve, të dhënave ose përdorimit, që rrjedhin nga ose në lidhje me përdorimin tuaj të Platformës." %}</p>
+            <p>{% trans "Përgjegjësia jonë totale për çdo pretendim që rrjedh nga ose në lidhje me këto Kushte nuk do të tejkalojë shumën që keni paguar për përdorimin e Platformës gjatë 12 muajve të mëparshëm." %}</p>
+            
+            <h2 class="h4 mb-3 mt-4">9. {% trans "Ndryshimet në Kushte" %}</h2>
+            <p>{% trans "Ne rezervojmë të drejtën për të modifikuar këto Kushte në çdo kohë. Nëse bëjmë ndryshime, do t'ju njoftojmë duke postuar Kushtet e rishikuara në Platformë dhe duke përditësuar datën e 'Përditësuar më' në krye të këtyre Kushteve." %}</p>
+            <p>{% trans "Përdorimi i vazhdueshëm i Platformës pas postimit të Kushteve të rishikuara përbën pranimin tuaj të ndryshimeve." %}</p>
+            
+            <h2 class="h4 mb-3 mt-4">10. {% trans "Ligji Qeverisës" %}</h2>
+            <p>{% trans "Këto Kushte do të qeverisen dhe interpretohen në përputhje me ligjet e Republikës së Shqipërisë, pa marrë parasysh konfliktin e dispozitave ligjore." %}</p>
+            <p>{% trans "Çdo mosmarrëveshje që rrjedh nga ose në lidhje me këto Kushte do të zgjidhet ekskluzivisht nga gjykatat kompetente në Tiranë, Shqipëri." %}</p>
+            
+            <h2 class="h4 mb-3 mt-4">11. {% trans "Kontakti" %}</h2>
+            <p>{% trans "Nëse keni pyetje ose shqetësime në lidhje me këto Kushte, ju lutemi na kontaktoni në:" %}</p>
+            <p>
+                Lidhje Biznesi<br>
+                Rruga "Myslym Shyri", Nr. 10<br>
+                Tiranë, Shqipëri<br>
+                Email: info@lidhjebiznesi.al<br>
+                Tel: +355 69 123 4567
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

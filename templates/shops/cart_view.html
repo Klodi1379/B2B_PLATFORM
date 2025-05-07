@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Shopping Cart" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'shops:dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% trans "Shopping Cart" %}</li>
+                </ol>
+            </nav>
+            <h1 class="h3">{% trans "Shopping Cart" %}</h1>
+            <p class="text-muted">{% trans "Review your items before placing an order" %}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Cart Items -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{% trans "Cart Items" %}</h5>
+                    {% if supplier %}
+                        <span class="badge bg-primary">{{ supplier.name }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body p-0">
+                    {% if cart_items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>{% trans "Product" %}</th>
+                                        <th class="text-center">{% trans "Quantity" %}</th>
+                                        <th class="text-end">{% trans "Unit Price" %}</th>
+                                        <th class="text-end">{% trans "Total" %}</th>
+                                        <th class="text-center">{% trans "Actions" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in cart_items %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if item.product.image %}
+                                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="me-2" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    {% else %}
+                                                        <div class="bg-light d-flex align-items-center justify-content-center me-2" style="width: 50px; height: 50px;">
+                                                            <i class="fa fa-box text-muted"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <h6 class="mb-0">{{ item.product.name }}</h6>
+                                                        <small class="text-muted">{{ item.product.sku }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                <form method="post" action="{% url 'shops:cart_update' %}" class="d-flex align-items-center justify-content-center">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                                                    <div class="input-group input-group-sm" style="width: 120px;">
+                                                        <button type="button" class="btn btn-outline-secondary quantity-decrease">
+                                                            <i class="fa fa-minus"></i>
+                                                        </button>
+                                                        <input type="number" name="quantity" class="form-control text-center"
+                                                               value="{{ item.quantity }}" min="{{ item.product.min_order_quantity }}"
+                                                               step="0.01" required>
+                                                        <button type="button" class="btn btn-outline-secondary quantity-increase">
+                                                            <i class="fa fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-sm btn-outline-primary ms-2">
+                                                        <i class="fa fa-sync-alt"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                            <td class="text-end">{{ item.price }} Lekë</td>
+                                            <td class="text-end fw-bold">{{ item.total }} Lekë</td>
+                                            <td class="text-center">
+                                                <form method="post" action="{% url 'shops:cart_remove' %}">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="3" class="text-end fw-bold">{% trans "Total" %}</td>
+                                        <td class="text-end fw-bold">{{ total }} Lekë</td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fa fa-shopping-cart fa-3x text-muted mb-3"></i>
+                            <h5>{% trans "Your cart is empty" %}</h5>
+                            <p class="text-muted">{% trans "Add products to your cart to place an order" %}</p>
+                            <a href="{% url 'products:product_list' %}" class="btn btn-primary mt-3">
+                                <i class="fa fa-search me-2"></i> {% trans "Browse Products" %}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-md-4 mb-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Order Summary" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>{% trans "Items" %}</span>
+                        <span>{{ cart_items|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>{% trans "Subtotal" %}</span>
+                        <span>{{ total }} Lekë</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-3 fw-bold">
+                        <span>{% trans "Total" %}</span>
+                        <span>{{ total }} Lekë</span>
+                    </div>
+
+                    {% if cart_items %}
+                        <div class="d-grid gap-2 mt-4">
+                            <a href="{% url 'shops:order_create' %}" class="btn btn-primary">
+                                <i class="fa fa-check me-2"></i> {% trans "Proceed to Checkout" %}
+                            </a>
+                            <a href="{% url 'shops:cart_clear' %}" class="btn btn-outline-danger">
+                                <i class="fa fa-trash me-2"></i> {% trans "Clear Cart" %}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if supplier %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">{% trans "Supplier Information" %}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            {% if supplier.logo %}
+                                <img src="{{ supplier.logo.url }}" alt="{{ supplier.name }}" class="me-3" style="width: 48px; height: 48px; object-fit: contain;">
+                            {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                    <i class="fa fa-building fa-lg text-muted"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <h5 class="mb-0">{{ supplier.name }}</h5>
+                                <p class="mb-0 text-muted">{% trans "Supplier" %}</p>
+                            </div>
+                        </div>
+
+                        <p class="mb-1"><strong>{% trans "Address" %}:</strong></p>
+                        <p class="mb-3">{{ supplier.address }}, {{ supplier.city }}, {{ supplier.country }}</p>
+
+                        <div class="d-grid">
+                            <a href="{% url 'shops:supplier_catalog' supplier.id %}" class="btn btn-outline-primary">
+                                <i class="fa fa-list me-2"></i> {% trans "Continue Shopping" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">{% trans "Continue Shopping" %}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary mb-2">
+                                <i class="fa fa-search me-2"></i> {% trans "Browse All Products" %}
+                            </a>
+                            <a href="{% url 'shops:supplier_list' %}" class="btn btn-outline-secondary">
+                                <i class="fa fa-building me-2"></i> {% trans "Browse Suppliers" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Quantity increase/decrease buttons
+        document.querySelectorAll('.quantity-decrease').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const input = this.parentNode.querySelector('input[name="quantity"]');
+                const minValue = parseFloat(input.getAttribute('min'));
+                let value = parseFloat(input.value);
+
+                if (value > minValue) {
+                    input.value = (value - 1).toFixed(2);
+                }
+            });
+        });
+
+        document.querySelectorAll('.quantity-increase').forEach(function(button) {
+            button.addEventListener('click', function() {
+                const input = this.parentNode.querySelector('input[name="quantity"]');
+                let value = parseFloat(input.value);
+                input.value = (value + 1).toFixed(2);
+            });
+        });
+    });
+</script>
+{% endblock %}

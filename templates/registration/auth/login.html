@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Log In" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <img src="{% static 'img/logo.png' %}" alt="Lidhje Biznesi" class="mb-3" style="height: 60px;">
+                        <h1 class="h3 mb-3">{% trans "Log In to Your Account" %}</h1>
+                    </div>
+                    
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>{% trans "Login failed!" %}</strong>
+                            <p class="mb-0">{% trans "Please check your email and password and try again." %}</p>
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                        
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">{% trans "Email" %}</label>
+                            <input type="email" name="username" class="form-control {% if form.username.errors %}is-invalid{% endif %}" id="id_username" autofocus required>
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.username.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <label for="id_password" class="form-label">{% trans "Password" %}</label>
+                                <a href="{% url 'password_reset' %}" class="text-decoration-none small">{% trans "Forgot password?" %}</a>
+                            </div>
+                            <input type="password" name="password" class="form-control {% if form.password.errors %}is-invalid{% endif %}" id="id_password" required>
+                            {% if form.password.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.password.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" name="remember" class="form-check-input" id="remember-me">
+                            <label class="form-check-label" for="remember-me">{% trans "Remember me" %}</label>
+                        </div>
+                        
+                        <div class="d-grid mb-4">
+                            <button type="submit" class="btn btn-primary btn-lg">{% trans "Log In" %}</button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center">
+                        <p>{% trans "Don't have an account yet?" %}</p>
+                        <div class="d-flex flex-column flex-md-row gap-2 justify-content-center">
+                            <a href="{% url 'registration:shop_registration' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-store me-2"></i>{% trans "Register as Shop" %}
+                            </a>
+                            <a href="{% url 'registration:supplier_registration' %}" class="btn btn-outline-success">
+                                <i class="fas fa-truck me-2"></i>{% trans "Register as Supplier" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

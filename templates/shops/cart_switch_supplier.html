@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Switch Supplier" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'shops:dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'shops:cart_view' %}">{% trans "Shopping Cart" %}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% trans "Switch Supplier" %}</li>
+                </ol>
+            </nav>
+            <h1 class="h3">{% trans "Switch Supplier" %}</h1>
+            <p class="text-muted">{% trans "You are about to switch to a different supplier" %}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-warning-subtle">
+                    <h5 class="mb-0 text-warning">
+                        <i class="fa fa-exclamation-triangle me-2"></i>
+                        {% trans "Warning: Switching Suppliers" %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <p class="mb-0">
+                            {% trans "Your cart currently contains products from" %} 
+                            <strong>{{ current_supplier.name }}</strong>. 
+                            {% trans "Adding products from" %} 
+                            <strong>{{ new_supplier.name }}</strong> 
+                            {% trans "will clear your current cart." %}
+                        </p>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">{% trans "Current Supplier" %}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        {% if current_supplier.logo %}
+                                            <img src="{{ current_supplier.logo.url }}" alt="{{ current_supplier.name }}" class="me-3" style="width: 48px; height: 48px; object-fit: contain;">
+                                        {% else %}
+                                            <div class="bg-light d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                                <i class="fa fa-building fa-lg text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <h5 class="mb-0">{{ current_supplier.name }}</h5>
+                                            <p class="mb-0 text-muted">{% trans "Current cart items" %}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h6 class="mb-0">{% trans "New Supplier" %}</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        {% if new_supplier.logo %}
+                                            <img src="{{ new_supplier.logo.url }}" alt="{{ new_supplier.name }}" class="me-3" style="width: 48px; height: 48px; object-fit: contain;">
+                                        {% else %}
+                                            <div class="bg-light d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                                <i class="fa fa-building fa-lg text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <h5 class="mb-0">{{ new_supplier.name }}</h5>
+                                            <p class="mb-0 text-muted">{% trans "New product to add" %}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">{% trans "Product to Add" %}</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                {% if pending_product.image %}
+                                    <img src="{{ pending_product.image.url }}" alt="{{ pending_product.name }}" class="me-3" style="width: 64px; height: 64px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-light d-flex align-items-center justify-content-center me-3" style="width: 64px; height: 64px;">
+                                        <i class="fa fa-box fa-2x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <h5 class="mb-1">{{ pending_product.name }}</h5>
+                                    <p class="mb-0">
+                                        <span class="badge bg-light text-dark">{{ quantity }} {{ pending_product.unit }}</span>
+                                        <span class="ms-2">{{ pending_product.price }} Lekë per {{ pending_product.unit }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p>{% trans "What would you like to do?" %}</p>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'shops:cart_view' %}" class="btn btn-outline-secondary">
+                            <i class="fa fa-arrow-left me-2"></i> {% trans "Keep Current Cart" %}
+                        </a>
+                        <form method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fa fa-sync me-2"></i> {% trans "Clear Cart & Add New Product" %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

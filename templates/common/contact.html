@@ -1,0 +1,272 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Contact Us" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8 text-center">
+            <h1 class="display-5 fw-bold mb-4">{% trans "Get in Touch" %}</h1>
+            <p class="lead mb-0">{% trans "Have questions or feedback? We'd love to hear from you." %}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Contact Form -->
+        <div class="col-lg-7 mb-5">
+            <div class="card shadow-sm">
+                <div class="card-body p-4 p-md-5">
+                    {% if form_success %}
+                        <div class="alert alert-success mb-4">
+                            <i class="fas fa-check-circle me-2"></i>
+                            {% trans "Thank you for your message! We'll get back to you as soon as possible." %}
+                        </div>
+                    {% endif %}
+
+                    {% if form_errors %}
+                        <div class="alert alert-danger mb-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {% trans "There was an error with your submission. Please check the form and try again." %}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" id="contact-form">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">{% trans "Your Name" %}<span class="text-danger">*</span></label>
+                                <input type="text" class="form-control {% if form.name.errors %}is-invalid{% endif %}" id="name" name="name" value="{{ form.name.value|default:'' }}" required>
+                                {% if form.name.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">{% trans "Email Address" %}<span class="text-danger">*</span></label>
+                                <input type="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" id="email" name="email" value="{{ form.email.value|default:'' }}" required>
+                                {% if form.email.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">{% trans "Phone Number" %} <span class="text-muted">({% trans "Optional" %})</span></label>
+                            <input type="tel" class="form-control {% if form.phone.errors %}is-invalid{% endif %}" id="phone" name="phone" value="{{ form.phone.value|default:'' }}">
+                            {% if form.phone.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.phone.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">{% trans "Subject" %}<span class="text-danger">*</span></label>
+                            <select class="form-select {% if form.subject.errors %}is-invalid{% endif %}" id="subject" name="subject" required>
+                                <option value="" {% if not form.subject.value %}selected{% endif %}>{% trans "Select a subject" %}</option>
+                                <option value="general" {% if form.subject.value == 'general' %}selected{% endif %}>{% trans "General Inquiry" %}</option>
+                                <option value="support" {% if form.subject.value == 'support' %}selected{% endif %}>{% trans "Technical Support" %}</option>
+                                <option value="partnership" {% if form.subject.value == 'partnership' %}selected{% endif %}>{% trans "Partnership Opportunities" %}</option>
+                                <option value="feedback" {% if form.subject.value == 'feedback' %}selected{% endif %}>{% trans "Feedback and Suggestions" %}</option>
+                                <option value="other" {% if form.subject.value == 'other' %}selected{% endif %}>{% trans "Other" %}</option>
+                            </select>
+                            {% if form.subject.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.subject.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="message" class="form-label">{% trans "Your Message" %}<span class="text-danger">*</span></label>
+                            <textarea class="form-control {% if form.message.errors %}is-invalid{% endif %}" id="message" name="message" rows="6" required>{{ form.message.value|default:'' }}</textarea>
+                            {% if form.message.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.message.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4 form-check">
+                            <input type="checkbox" class="form-check-input {% if form.privacy.errors %}is-invalid{% endif %}" id="privacy" name="privacy" required>
+                            <label class="form-check-label" for="privacy">
+                                {% trans "I agree to the processing of my data according to the" %} <a href="{% url 'common:privacy' %}" target="_blank">{% trans "Privacy Policy" %}</a><span class="text-danger">*</span>
+                            </label>
+                            {% if form.privacy.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.privacy.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>{% trans "Send Message" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">{% trans "Contact Information" %}</h3>
+
+                    <div class="mb-4">
+                        <h4 class="h6 text-muted mb-2">{% trans "Main Office" %}</h4>
+                        <p class="mb-0">
+                            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                            Rruga Myslym Shyri, Nr. 8<br>
+                            Tiranë, 1001<br>
+                            Albania
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 class="h6 text-muted mb-2">{% trans "Brussels Office" %}</h4>
+                        <p class="mb-0">
+                            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                            Avenue Louise 367<br>
+                            Brussels, 1050<br>
+                            Belgium
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 class="h6 text-muted mb-2">{% trans "Phone" %}</h4>
+                        <p class="mb-1">
+                            <i class="fas fa-phone text-primary me-2"></i>
+                            <a href="tel:+355 42 230 492" class="text-decoration-none">+355 42 230 492</a> (Albania)
+                        </p>
+                        <p class="mb-0">
+                            <i class="fas fa-phone text-primary me-2"></i>
+                            <a href="tel:+32 2 555 1234" class="text-decoration-none">+32 2 555 1234</a> (Belgium)
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 class="h6 text-muted mb-2">{% trans "Email" %}</h4>
+                        <p class="mb-1">
+                            <i class="fas fa-envelope text-primary me-2"></i>
+                            <a href="mailto:info@lidhjebiznesi.com" class="text-decoration-none">info@lidhjebiznesi.com</a>
+                        </p>
+                        <p class="mb-0">
+                            <i class="fas fa-envelope text-primary me-2"></i>
+                            <a href="mailto:support@lidhjebiznesi.com" class="text-decoration-none">support@lidhjebiznesi.com</a>
+                        </p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 class="h6 text-muted mb-2">{% trans "Working Hours" %}</h4>
+                        <p class="mb-0">
+                            <i class="fas fa-clock text-primary me-2"></i>
+                            {% trans "Monday - Friday" %}: 9:00 - 18:00<br>
+                            {% trans "Saturday" %}: 10:00 - 15:00<br>
+                            {% trans "Sunday" %}: {% trans "Closed" %}
+                        </p>
+                    </div>
+
+                    <div>
+                        <h4 class="h6 text-muted mb-2">{% trans "Follow Us" %}</h4>
+                        <div class="social-links">
+                            <a href="#" class="btn btn-outline-primary me-2" aria-label="Facebook">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-info me-2" aria-label="Twitter">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-primary me-2" aria-label="LinkedIn">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                            <a href="#" class="btn btn-outline-danger" aria-label="Instagram">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2996.1258850644946!2d19.81642531549066!3d41.32764497927003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDHCsDE5JzM5LjUiTiAxOcKwNDknMDIuNSJF!5e0!3m2!1sen!2sus!4v1623252000000!5m2!1sen!2sus" height="300" style="border:0; width: 100%;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="my-5">
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-8 text-center">
+                <h2 class="mb-4">{% trans "Frequently Asked Questions" %}</h2>
+                <p class="lead mb-0">{% trans "Find quick answers to common questions about Lidhje Biznesi." %}</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3 class="h5 mb-3">{% trans "How do I get started with Lidhje Biznesi?" %}</h3>
+                        <p class="mb-0">{% trans "Simply register an account as either a shop or supplier. Once registered, you can set up your profile, and start connecting with businesses. If you're a shop, you can browse supplier catalogs and place orders. If you're a supplier, you can upload your product catalog and start receiving orders." %}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3 class="h5 mb-3">{% trans "Is there a cost to use Lidhje Biznesi?" %}</h3>
+                        <p class="mb-0">{% trans "For shops, basic ordering features are free. For suppliers, we offer a freemium model with a free tier and premium subscription options with advanced features like route optimization. Visit our pricing page for more details." %}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3 class="h5 mb-3">{% trans "How secure is my business data on the platform?" %}</h3>
+                        <p class="mb-0">{% trans "We take data security seriously. All data is encrypted in transit and at rest. We use industry-standard security practices and regular security audits to ensure your business data remains protected. For more information, please review our privacy policy." %}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h3 class="h5 mb-3">{% trans "What kind of support do you offer?" %}</h3>
+                        <p class="mb-0">{% trans "We provide multiple support channels including email, phone, and in-app chat support. Our support team is available during business hours, and premium users get priority support. We also offer onboarding assistance and training for new users." %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'common:faq' %}" class="btn btn-outline-primary">
+                <i class="fas fa-question-circle me-2"></i>{% trans "View All FAQs" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

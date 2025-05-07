@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Delivery History" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'delivery:driver_dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% trans "Delivery History" %}</li>
+                </ol>
+            </nav>
+            <h1 class="h3">{% trans "Delivery History" %}</h1>
+            <p class="text-muted">{% trans "View your past deliveries and performance" %}</p>
+        </div>
+    </div>
+
+    <!-- Delivery Stats -->
+    <div class="row mb-4">
+        <!-- Total Deliveries -->
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Total Deliveries" %}</h5>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h1 class="display-4 mb-0">{{ total_deliveries }}</h1>
+                        <i class="fa fa-truck fa-3x text-primary opacity-25"></i>
+                    </div>
+                    <p class="card-text text-muted mt-3">
+                        {% trans "All time" %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Completed Deliveries -->
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Completed" %}</h5>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h1 class="display-4 mb-0">{{ completed_deliveries }}</h1>
+                        <i class="fa fa-check-circle fa-3x text-success opacity-25"></i>
+                    </div>
+                    <p class="card-text text-muted mt-3">
+                        {{ completion_rate }}% {% trans "completion rate" %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Distance -->
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Total Distance" %}</h5>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h1 class="display-4 mb-0">{{ total_distance }}</h1>
+                        <i class="fa fa-road fa-3x text-info opacity-25"></i>
+                    </div>
+                    <p class="card-text text-muted mt-3">
+                        {% trans "kilometers" %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Average Time -->
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Avg. Delivery Time" %}</h5>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h1 class="display-4 mb-0">{{ avg_delivery_time }}</h1>
+                        <i class="fa fa-clock fa-3x text-warning opacity-25"></i>
+                    </div>
+                    <p class="card-text text-muted mt-3">
+                        {% trans "minutes per stop" %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" action="{% url 'delivery:driver_history' %}" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="date_from" class="form-label">{% trans "From Date" %}</label>
+                            <input type="date" class="form-control" id="date_from" name="date_from" value="{{ request.GET.date_from }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date_to" class="form-label">{% trans "To Date" %}</label>
+                            <input type="date" class="form-control" id="date_to" name="date_to" value="{{ request.GET.date_to }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">{% trans "Status" %}</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">{% trans "All Statuses" %}</option>
+                                <option value="COMPLETED" {% if request.GET.status == 'COMPLETED' %}selected{% endif %}>{% trans "Completed" %}</option>
+                                <option value="FAILED" {% if request.GET.status == 'FAILED' %}selected{% endif %}>{% trans "Failed" %}</option>
+                                <option value="CANCELLED" {% if request.GET.status == 'CANCELLED' %}selected{% endif %}>{% trans "Cancelled" %}</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="search" class="form-label">{% trans "Search" %}</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="search" name="q" placeholder="{% trans 'Shop name, address...' %}" value="{{ request.GET.q }}">
+                                <button class="btn btn-outline-primary" type="submit">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delivery History Table -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{% trans "Delivery Plans" %}</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" id="exportData">
+                            <i class="fa fa-download me-1"></i> {% trans "Export" %}
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Date" %}</th>
+                                    <th>{% trans "Plan Name" %}</th>
+                                    <th>{% trans "Stops" %}</th>
+                                    <th>{% trans "Completed" %}</th>
+                                    <th>{% trans "Distance" %}</th>
+                                    <th>{% trans "Duration" %}</th>
+                                    <th>{% trans "Status" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if delivery_plans %}
+                                    {% for plan in delivery_plans %}
+                                        <tr>
+                                            <td>{{ plan.date|date:"j M Y" }}</td>
+                                            <td>{{ plan.name }}</td>
+                                            <td>{{ plan.stops_count }}</td>
+                                            <td>{{ plan.completed_stops_count }} / {{ plan.stops_count }}</td>
+                                            <td>{{ plan.total_distance }} km</td>
+                                            <td>{{ plan.total_duration }} min</td>
+                                            <td>
+                                                {% if plan.status == 'PENDING' %}
+                                                    <span class="badge bg-secondary">{% trans "Pending" %}</span>
+                                                {% elif plan.status == 'IN_PROGRESS' %}
+                                                    <span class="badge bg-primary">{% trans "In Progress" %}</span>
+                                                {% elif plan.status == 'COMPLETED' %}
+                                                    <span class="badge bg-success">{% trans "Completed" %}</span>
+                                                {% elif plan.status == 'CANCELLED' %}
+                                                    <span class="badge bg-danger">{% trans "Cancelled" %}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'delivery:plan_detail' plan.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fa fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4">
+                                            <p class="text-muted mb-0">{% trans "No delivery plans found" %}</p>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                {% if delivery_plans.has_other_pages %}
+                <div class="card-footer bg-transparent">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if delivery_plans.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ delivery_plans.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="First">
+                                        <span aria-hidden="true">&laquo;&laquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Previous">
+                                        <span aria-hidden="true">&laquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for i in delivery_plans.paginator.page_range %}
+                                {% if delivery_plans.number == i %}
+                                    <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                                {% elif i > delivery_plans.number|add:'-3' and i < delivery_plans.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}">{{ i }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if delivery_plans.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ delivery_plans.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ delivery_plans.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.date_from %}&date_from={{ request.GET.date_from }}{% endif %}{% if request.GET.date_to %}&date_to={{ request.GET.date_to }}{% endif %}" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Next">
+                                        <span aria-hidden="true">&raquo;</span>
+                                    </a>
+                                </li>
+                                <li class="page-item disabled">
+                                    <a class="page-link" href="#" aria-label="Last">
+                                        <span aria-hidden="true">&raquo;&raquo;</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle export button click
+        const exportButton = document.getElementById('exportData');
+        if (exportButton) {
+            exportButton.addEventListener('click', function() {
+                // Get current URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                // Add export parameter
+                urlParams.set('export', 'csv');
+                
+                // Redirect to export URL
+                window.location.href = `{% url 'delivery:driver_history' %}?${urlParams.toString()}`;
+            });
+        }
+    });
+</script>
+{% endblock %}

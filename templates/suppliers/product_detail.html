@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ product.name }} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">{% trans "Product Details" %}</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'suppliers:product_edit' product.id %}" class="btn btn-primary">
+                <i class="fas fa-edit me-2"></i>{% trans "Edit Product" %}
+            </a>
+            <a href="{% url 'suppliers:product_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>{% trans "Back to Products" %}
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid rounded" style="max-height: 300px;">
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 300px;">
+                                <i class="fas fa-box fa-5x text-secondary"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <h2 class="h4 mb-2">{{ product.name }}</h2>
+                    <p class="text-muted mb-3">{{ product.category.name }}</p>
+                    
+                    {% if product.is_active %}
+                        {% if product.stock_quantity <= 0 %}
+                            <span class="badge bg-danger">{% trans "Out of Stock" %}</span>
+                        {% elif product.stock_quantity <= product.low_stock_threshold %}
+                            <span class="badge bg-warning">{% trans "Low Stock" %}</span>
+                        {% else %}
+                            <span class="badge bg-success">{% trans "Active" %}</span>
+                        {% endif %}
+                    {% else %}
+                        <span class="badge bg-secondary">{% trans "Inactive" %}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 mb-4">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Product Information" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-medium">{% trans "SKU" %}</div>
+                        <div class="col-md-9">{{ product.sku|default:"-" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-medium">{% trans "Status" %}</div>
+                        <div class="col-md-9">
+                            {% if product.is_active %}
+                                <span class="text-success">{% trans "Active" %}</span>
+                            {% else %}
+                                <span class="text-secondary">{% trans "Inactive" %}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-medium">{% trans "Category" %}</div>
+                        <div class="col-md-9">{{ product.category.name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-medium">{% trans "Created On" %}</div>
+                        <div class="col-md-9">{{ product.created_at|date:"d F Y, H:i" }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 fw-medium">{% trans "Last Updated" %}</div>
+                        <div class="col-md-9">{{ product.updated_at|date:"d F Y, H:i" }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 fw-medium">{% trans "Description" %}</div>
+                        <div class="col-md-9">{{ product.description|default:"-"|linebreaks }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">{% trans "Pricing" %}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6 fw-medium">{% trans "Regular Price" %}</div>
+                                <div class="col-md-6 text-end">{{ product.price }} ALL</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6 fw-medium">{% trans "Discount Price" %}</div>
+                                <div class="col-md-6 text-end">
+                                    {% if product.discount_price %}
+                                        <span class="text-success">{{ product.discount_price }} ALL</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if product.discount_price %}
+                                <div class="row">
+                                    <div class="col-md-6 fw-medium">{% trans "Discount" %}</div>
+                                    <div class="col-md-6 text-end text-success">
+                                        {% with discount=product.get_discount_percentage %}
+                                            -{{ discount }}%
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">{% trans "Inventory" %}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-7 fw-medium">{% trans "Stock Quantity" %}</div>
+                                <div class="col-md-5 text-end {% if product.stock_quantity <= product.low_stock_threshold %}text-danger{% endif %}">
+                                    {{ product.stock_quantity }}
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-7 fw-medium">{% trans "Low Stock Threshold" %}</div>
+                                <div class="col-md-5 text-end">{{ product.low_stock_threshold }}</div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-7 fw-medium">{% trans "Stock Status" %}</div>
+                                <div class="col-md-5 text-end">
+                                    {% if product.stock_quantity <= 0 %}
+                                        <span class="text-danger">{% trans "Out of Stock" %}</span>
+                                    {% elif product.stock_quantity <= product.low_stock_threshold %}
+                                        <span class="text-warning">{% trans "Low Stock" %}</span>
+                                    {% else %}
+                                        <span class="text-success">{% trans "In Stock" %}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order History -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Order History" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Order #" %}</th>
+                                    <th>{% trans "Shop" %}</th>
+                                    <th>{% trans "Date" %}</th>
+                                    <th>{% trans "Quantity" %}</th>
+                                    <th>{% trans "Status" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order_item in product.order_items.all|slice:":5" %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'suppliers:order_detail' order_item.order.id %}" class="text-primary">
+                                                #{{ order_item.order.order_number }}
+                                            </a>
+                                        </td>
+                                        <td>{{ order_item.order.shop.shop_name }}</td>
+                                        <td>{{ order_item.order.created_at|date:"d M Y" }}</td>
+                                        <td>{{ order_item.quantity }}</td>
+                                        <td>
+                                            <span class="badge {% if order_item.order.status == 'PENDING' %}bg-secondary{% elif order_item.order.status == 'CONFIRMED' %}bg-primary{% elif order_item.order.status == 'PROCESSING' %}bg-info{% elif order_item.order.status == 'READY' %}bg-warning{% elif order_item.order.status == 'DELIVERING' %}bg-info{% elif order_item.order.status == 'DELIVERED' %}bg-success{% else %}bg-danger{% endif %}">
+                                                {{ order_item.order.get_status_display }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <p class="text-muted mb-0">{% trans "No order history" %}</p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% if product.order_items.count > 5 %}
+                    <div class="card-footer bg-white text-end">
+                        <a href="{% url 'suppliers:order_list' %}?product={{ product.id }}" class="text-primary">
+                            {% trans "View all orders with this product" %}
+                            <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

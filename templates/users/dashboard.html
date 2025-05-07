@@ -1,0 +1,246 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Admin Dashboard" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="h3">{% trans "Admin Dashboard" %}</h1>
+            <p class="text-muted">{% trans "Welcome to the administration dashboard" %}</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards Row -->
+    <div class="row mb-4">
+        <!-- Users Card -->
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Users" %}</h5>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h1 class="display-4 mb-0">{{ user_count }}</h1>
+                        <i class="fa fa-users fa-3x text-primary opacity-25"></i>
+                    </div>
+                    <p class="card-text text-muted mt-3">
+                        {% trans "Total registered users" %}
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'admin:users_user_changelist' %}" class="btn btn-sm btn-outline-primary">
+                        {% trans "Manage Users" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Suppliers Card -->
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Suppliers" %}</h5>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h1 class="display-4 mb-0">{{ supplier_count }}</h1>
+                        <i class="fa fa-building fa-3x text-success opacity-25"></i>
+                    </div>
+                    <p class="card-text text-muted mt-3">
+                        {% trans "Active suppliers" %}
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'admin:suppliers_supplier_changelist' %}" class="btn btn-sm btn-outline-success">
+                        {% trans "Manage Suppliers" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shops Card -->
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Shops" %}</h5>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h1 class="display-4 mb-0">{{ shop_count }}</h1>
+                        <i class="fa fa-store fa-3x text-info opacity-25"></i>
+                    </div>
+                    <p class="card-text text-muted mt-3">
+                        {% trans "Active shops" %}
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'admin:shops_shop_changelist' %}" class="btn btn-sm btn-outline-info">
+                        {% trans "Manage Shops" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Card -->
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{% trans "Orders" %}</h5>
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h1 class="display-4 mb-0">{{ order_count }}</h1>
+                        <i class="fa fa-shopping-cart fa-3x text-warning opacity-25"></i>
+                    </div>
+                    <p class="card-text text-muted mt-3">
+                        {% trans "Total orders" %}
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'admin:orders_order_changelist' %}" class="btn btn-sm btn-outline-warning">
+                        {% trans "Manage Orders" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Activity -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{% trans "Recent Activity" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% if recent_activities %}
+                            {% for activity in recent_activities %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ activity.title }}</h6>
+                                        <small class="text-muted">{{ activity.timestamp|timesince }} {% trans "ago" %}</small>
+                                    </div>
+                                    <p class="mb-1">{{ activity.description }}</p>
+                                    <small class="text-muted">
+                                        {% if activity.user %}
+                                            {% trans "By" %} {{ activity.user.get_full_name|default:activity.user.username }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="list-group-item text-center py-4">
+                                <p class="text-muted mb-0">{% trans "No recent activities" %}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{% trans "System Status" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>{% trans "Database" %}</h6>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ db_status.usage_percent }}%">
+                                {{ db_status.usage_percent }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">{{ db_status.used }} / {{ db_status.total }} {% trans "used" %}</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6>{% trans "Storage" %}</h6>
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: {{ storage_status.usage_percent }}%">
+                                {{ storage_status.usage_percent }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">{{ storage_status.used }} / {{ storage_status.total }} {% trans "used" %}</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6>{% trans "Memory" %}</h6>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ memory_status.usage_percent }}%">
+                                {{ memory_status.usage_percent }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">{{ memory_status.used }} / {{ memory_status.total }} {% trans "used" %}</small>
+                    </div>
+
+                    <div class="mb-0">
+                        <h6>{% trans "System Info" %}</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>{% trans "Django Version" %}:</strong> {{ system_info.django_version }}</li>
+                            <li><strong>{% trans "Python Version" %}:</strong> {{ system_info.python_version }}</li>
+                            <li><strong>{% trans "Last Backup" %}:</strong> {{ system_info.last_backup|default:_("Never") }}</li>
+                            <li><strong>{% trans "Uptime" %}:</strong> {{ system_info.uptime }}</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <a href="{% url 'admin:index' %}" class="btn btn-sm btn-outline-primary">
+                        {% trans "Go to Admin Panel" %}
+                    </a>
+                    <a href="#" class="btn btn-sm btn-outline-secondary">
+                        {% trans "System Settings" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Quick Actions" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin:users_user_add' %}" class="btn btn-outline-primary w-100">
+                                <i class="fa fa-user-plus me-2"></i> {% trans "Add User" %}
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin:suppliers_supplier_add' %}" class="btn btn-outline-success w-100">
+                                <i class="fa fa-building me-2"></i> {% trans "Add Supplier" %}
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin:shops_shop_add' %}" class="btn btn-outline-info w-100">
+                                <i class="fa fa-store me-2"></i> {% trans "Add Shop" %}
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'admin:products_product_add' %}" class="btn btn-outline-warning w-100">
+                                <i class="fa fa-box me-2"></i> {% trans "Add Product" %}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize any dashboard-specific JavaScript here
+    document.addEventListener('DOMContentLoaded', function() {
+        // Example: Refresh system status every 60 seconds
+        // setInterval(refreshSystemStatus, 60000);
+    });
+
+    function refreshSystemStatus() {
+        // HTMX could be used here to refresh the system status panel
+        // We would need to implement an API endpoint for this
+        console.log('System status refresh would happen here');
+    }
+</script>
+{% endblock %}

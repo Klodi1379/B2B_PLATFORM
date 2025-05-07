@@ -1,0 +1,161 @@
+/* 
+* Lidhje Biznesi - Main Stylesheet
+* Version: 1.0.0
+*/
+
+/* ===== Custom Variables ===== */
+:root {
+    --primary-color: #4e73df;
+    --primary-dark: #2e59d9;
+    --primary-light: #6f8be4;
+    --secondary-color: #858796;
+    --success-color: #1cc88a;
+    --info-color: #36b9cc;
+    --warning-color: #f6c23e;
+    --danger-color: #e74a3b;
+    --light-color: #f8f9fc;
+    --dark-color: #5a5c69;
+}
+
+/* ===== Global Styles ===== */
+body {
+    font-family: 'Nunito', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f8f9fc;
+    color: #333;
+}
+
+/* Improve spacing for main content */
+main.container {
+    min-height: calc(100vh - 160px);
+    padding-top: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+/* Links */
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+}
+
+/* ===== Navigation ===== */
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.4rem;
+}
+
+.navbar-light .navbar-nav .nav-link {
+    padding: 0.5rem 1rem;
+}
+
+.navbar-light .navbar-nav .nav-link.active {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* ===== Dashboard Cards ===== */
+.card {
+    border: none;
+    border-radius: 0.35rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
+}
+
+/* ===== Forms ===== */
+.form-control:focus {
+    border-color: #bac8f3;
+    box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+}
+
+.form-control.is-invalid:focus {
+    box-shadow: 0 0 0 0.25rem rgba(231, 74, 59, 0.25);
+}
+
+/* ===== Tables ===== */
+.table-hover tbody tr:hover {
+    background-color: rgba(78, 115, 223, 0.05);
+}
+
+/* ===== Status Badges ===== */
+.badge.bg-draft, 
+.badge.bg-secondary {
+    background-color: var(--secondary-color) !important;
+}
+
+.badge.bg-submitted,
+.badge.bg-info {
+    background-color: var(--info-color) !important;
+}
+
+.badge.bg-confirmed,
+.badge.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.badge.bg-processing,
+.badge.bg-warning {
+    background-color: var(--warning-color) !important;
+    color: #212529;
+}
+
+.badge.bg-ready,
+.badge.bg-success {
+    background-color: var(--success-color) !important;
+}
+
+.badge.bg-delivering {
+    background-color: #fd7e14 !important;
+}
+
+.badge.bg-delivered {
+    background-color: #20c997 !important;
+}
+
+.badge.bg-cancelled,
+.badge.bg-danger {
+    background-color: var(--danger-color) !important;
+}
+
+/* ===== Footer ===== */
+.footer {
+    color: var(--secondary-color);
+    font-size: 0.875rem;
+}
+
+.footer a {
+    color: var(--dark-color);
+}
+
+/* ===== Mobile Responsiveness ===== */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    
+    .card-header h5 {
+        font-size: 1rem;
+    }
+    
+    .table th, .table td {
+        padding: 0.5rem;
+    }
+}

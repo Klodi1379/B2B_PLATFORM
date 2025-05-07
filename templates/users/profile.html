@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "My Profile" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-3 mb-4">
+            <!-- Profile Sidebar -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" alt="{{ user.get_full_name }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px; font-size: 40px;">
+                            {{ user.get_initials }}
+                        </div>
+                    {% endif %}
+                    
+                    <h5 class="mb-1">{{ user.get_full_name }}</h5>
+                    <p class="text-muted">
+                        {% if is_supplier %}
+                            {% trans "Supplier" %}
+                        {% else %}
+                            {% trans "Shop Owner" %}
+                        {% endif %}
+                    </p>
+                    
+                    <div class="d-grid">
+                        <a href="{% url 'users:profile_edit' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-2"></i>{% trans "Edit Profile" %}
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'users:profile' %}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-user me-2"></i>{% trans "Profile" %}
+                    </a>
+                    <a href="{% url 'users:password_change' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-key me-2"></i>{% trans "Change Password" %}
+                    </a>
+                    {% if is_supplier %}
+                        <a href="{% url 'suppliers:dashboard' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-tachometer-alt me-2"></i>{% trans "Supplier Dashboard" %}
+                        </a>
+                    {% else %}
+                        <a href="{% url 'shops:dashboard' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-tachometer-alt me-2"></i>{% trans "Shop Dashboard" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <!-- Profile Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{% trans "Profile Information" %}</h5>
+                    <a href="{% url 'users:profile_edit' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit me-2"></i>{% trans "Edit" %}
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-muted mb-2">{% trans "Personal Information" %}</h6>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4 text-muted">{% trans "Full Name" %}</dt>
+                                <dd class="col-sm-8">{{ user.get_full_name }}</dd>
+                                
+                                <dt class="col-sm-4 text-muted">{% trans "Email" %}</dt>
+                                <dd class="col-sm-8">{{ user.email }}</dd>
+                                
+                                <dt class="col-sm-4 text-muted">{% trans "Phone" %}</dt>
+                                <dd class="col-sm-8">{{ user_profile.phone|default:"—" }}</dd>
+                                
+                                <dt class="col-sm-4 text-muted">{% trans "Joined" %}</dt>
+                                <dd class="col-sm-8">{{ user.date_joined|date:"j F Y" }}</dd>
+                            </dl>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-muted mb-2">{% trans "Business Information" %}</h6>
+                            <dl class="row mb-0">
+                                {% if is_supplier %}
+                                    <dt class="col-sm-4 text-muted">{% trans "Company" %}</dt>
+                                    <dd class="col-sm-8">{{ supplier.company_name }}</dd>
+                                    
+                                    <dt class="col-sm-4 text-muted">{% trans "Company Type" %}</dt>
+                                    <dd class="col-sm-8">{{ supplier.get_company_type_display }}</dd>
+                                    
+                                    <dt class="col-sm-4 text-muted">{% trans "Tax ID" %}</dt>
+                                    <dd class="col-sm-8">{{ supplier.tax_id }}</dd>
+                                    
+                                    <dt class="col-sm-4 text-muted">{% trans "VAT Number" %}</dt>
+                                    <dd class="col-sm-8">{{ supplier.vat_number|default:"—" }}</dd>
+                                {% else %}
+                                    <dt class="col-sm-4 text-muted">{% trans "Shop" %}</dt>
+                                    <dd class="col-sm-8">{{ shop.shop_name }}</dd>
+                                    
+                                    <dt class="col-sm-4 text-muted">{% trans "Shop Type" %}</dt>
+                                    <dd class="col-sm-8">{{ shop.get_shop_type_display }}</dd>
+                                    
+                                    <dt class="col-sm-4 text-muted">{% trans "Tax ID" %}</dt>
+                                    <dd class="col-sm-8">{{ shop.tax_id }}</dd>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <h6 class="text-muted mb-2">{% trans "Address" %}</h6>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4 text-muted">{% trans "Street" %}</dt>
+                                <dd class="col-sm-8">
+                                    {% if is_supplier %}
+                                        {{ supplier.address|default:"—" }}
+                                    {% else %}
+                                        {{ shop.address|default:"—" }}
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-4 text-muted">{% trans "City" %}</dt>
+                                <dd class="col-sm-8">
+                                    {% if is_supplier %}
+                                        {{ supplier.city|default:"—" }}
+                                    {% else %}
+                                        {{ shop.city|default:"—" }}
+                                    {% endif %}
+                                </dd>
+                                
+                                <dt class="col-sm-4 text-muted">{% trans "Postal Code" %}</dt>
+                                <dd class="col-sm-8">
+                                    {% if is_supplier %}
+                                        {{ supplier.postal_code|default:"—" }}
+                                    {% else %}
+                                        {{ shop.postal_code|default:"—" }}
+                                    {% endif %}
+                                </dd>
+                            </dl>
+                        </div>
+                        
+                        {% if is_supplier %}
+                            <div class="col-md-6 mb-4">
+                                <h6 class="text-muted mb-2">{% trans "Bank Information" %}</h6>
+                                <dl class="row mb-0">
+                                    <dt class="col-sm-4 text-muted">{% trans "Bank Name" %}</dt>
+                                    <dd class="col-sm-8">{{ supplier.bank_name|default:"—" }}</dd>
+                                    
+                                    <dt class="col-sm-4 text-muted">{% trans "Account No." %}</dt>
+                                    <dd class="col-sm-8">•••• {{ supplier.account_number|slice:"-4:" }}</dd>
+                                    
+                                    <dt class="col-sm-4 text-muted">{% trans "SWIFT/BIC" %}</dt>
+                                    <dd class="col-sm-8">{{ supplier.swift_code|default:"—" }}</dd>
+                                </dl>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Business Statistics -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        {% if is_supplier %}
+                            {% trans "Supplier Statistics" %}
+                        {% else %}
+                            {% trans "Shop Statistics" %}
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Stats Cards -->
+                        {% if is_supplier %}
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="text-center">
+                                    <h2 class="h3 text-primary">{{ products_count }}</h2>
+                                    <p class="text-muted mb-0">{% trans "Products" %}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="text-center">
+                                    <h2 class="h3 text-success">{{ shops_count }}</h2>
+                                    <p class="text-muted mb-0">{% trans "Shops" %}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="text-center">
+                                    <h2 class="h3 text-info">{{ orders_count }}</h2>
+                                    <p class="text-muted mb-0">{% trans "Orders" %}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="text-center">
+                                    <h2 class="h3 text-warning">{{ recent_orders_count }}</h2>
+                                    <p class="text-muted mb-0">{% trans "Recent Orders" %}</p>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="text-center">
+                                    <h2 class="h3 text-primary">{{ suppliers_count }}</h2>
+                                    <p class="text-muted mb-0">{% trans "Suppliers" %}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="text-center">
+                                    <h2 class="h3 text-success">{{ orders_count }}</h2>
+                                    <p class="text-muted mb-0">{% trans "Orders" %}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="text-center">
+                                    <h2 class="h3 text-info">{{ active_orders_count }}</h2>
+                                    <p class="text-muted mb-0">{% trans "Active Orders" %}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="text-center">
+                                    <h2 class="h3 text-warning">{{ delivered_orders_count }}</h2>
+                                    <p class="text-muted mb-0">{% trans "Delivered Orders" %}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Recent Activity Chart -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">{% trans "Activity (Last 30 Days)" %}</h6>
+                        <canvas id="activityChart" height="100"></canvas>
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-center">
+                    {% if is_supplier %}
+                        <a href="{% url 'suppliers:dashboard' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-chart-line me-2"></i>{% trans "View Detailed Analytics" %}
+                        </a>
+                    {% else %}
+                        <a href="{% url 'shops:dashboard' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-chart-line me-2"></i>{% trans "View Detailed Analytics" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Recent Activity" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for activity in recent_activities %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <div>
+                                        <i class="fas {{ activity.icon }} text-{{ activity.color }} me-2"></i>
+                                        {{ activity.description }}
+                                    </div>
+                                    <span class="text-muted small">{{ activity.timestamp|date:"j M Y, H:i" }}</span>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="list-group-item text-center py-4">
+                                <i class="fas fa-history fa-2x text-muted mb-3"></i>
+                                <p class="mb-0">{% trans "No recent activity" %}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Activity Chart
+        const ctx = document.getElementById('activityChart').getContext('2d');
+        
+        const activityData = {
+            labels: {{ activity_dates|safe }},
+            datasets: [{
+                label: '{% trans "Orders" %}',
+                data: {{ order_counts|safe }},
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                tension: 0.4
+            }]
+        };
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: activityData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

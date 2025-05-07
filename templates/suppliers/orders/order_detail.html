@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% translate "Order" %} #{{ order.id }} | {{ supplier.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">{% translate "Order" %} #{{ order.id }}</h1>
+        <div>
+            <a href="{% url 'suppliers:order_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> {% translate "Back to Orders" %}
+            </a>
+            {% if order.can_be_cancelled %}
+            <a href="{% url 'suppliers:order_cancel' order.id %}" class="btn btn-outline-danger ms-2">
+                <i class="fas fa-times"></i> {% translate "Cancel Order" %}
+            </a>
+            {% endif %}
+            <a href="{% url 'suppliers:order_print' order.id %}" class="btn btn-outline-primary ms-2" target="_blank">
+                <i class="fas fa-print"></i> {% translate "Print" %}
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Order Details -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0">{% translate "Order Details" %}</h5>
+                        </div>
+                        <div class="col-auto">
+                            <span class="badge bg-{{ order.get_status_display_class }}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">{% translate "Order Information" %}</h6>
+                            <p><strong>{% translate "Order ID:" %}</strong> #{{ order.id }}</p>
+                            <p><strong>{% translate "Date:" %}</strong> {{ order.created_at|date:"d M Y H:i" }}</p>
+                            <p><strong>{% translate "Status:" %}</strong> 
+                                <span class="badge bg-{{ order.get_status_display_class }}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </p>
+                            {% if order.submitted_at %}
+                            <p><strong>{% translate "Submitted:" %}</strong> {{ order.submitted_at|date:"d M Y H:i" }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">{% translate "Shop Information" %}</h6>
+                            <p><strong>{% translate "Shop:" %}</strong> {{ order.shop.name }}</p>
+                            <p><strong>{% translate "Address:" %}</strong> {{ order.shop.address }}, {{ order.shop.city }}</p>
+                            <p><strong>{% translate "Phone:" %}</strong> {{ order.shop.phone }}</p>
+                            <p><strong>{% translate "Email:" %}</strong> {{ order.shop.email|default:"-" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">{% translate "Delivery Information" %}</h6>
+                            <p><strong>{% translate "Delivery Date:" %}</strong> 
+                                {% if order.delivery_date %}
+                                {{ order.delivery_date|date:"d M Y" }}
+                                {% else %}
+                                <span class="text-muted">{% translate "Not specified" %}</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>{% translate "Time Window:" %}</strong> 
+                                {% if order.delivery_time_window %}
+                                {{ order.delivery_time_window }}
+                                {% else %}
+                                <span class="text-muted">{% translate "Not specified" %}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">{% translate "Additional Information" %}</h6>
+                            <p><strong>{% translate "Notes:" %}</strong></p>
+                            <p>{{ order.notes|default:"-"|linebreaks }}</p>
+                        </div>
+                    </div>
+
+                    <h6 class="text-muted mb-3">{% translate "Order Items" %}</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% translate "Product" %}</th>
+                                    <th class="text-end">{% translate "Price" %}</th>
+                                    <th class="text-end">{% translate "Quantity" %}</th>
+                                    <th class="text-end">{% translate "Total" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order_items %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if item.product.image %}
+                                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="rounded me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                            {% else %}
+                                            <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="fas fa-box text-secondary"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="mb-0">{{ item.product.name }}</h6>
+                                                <small class="text-muted">{{ item.product.sku|default:"-" }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-end">{{ item.unit_price }} Lekë</td>
+                                    <td class="text-end">{{ item.quantity }} {{ item.product.unit }}</td>
+                                    <td class="text-end">{{ item.total_price }} Lekë</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3" class="text-end">{% translate "Total:" %}</th>
+                                    <th class="text-end">{{ order.total_amount }} Lekë</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Actions -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% translate "Order Actions" %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'suppliers:order_update_status' order.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ status_form.status.id_for_label }}" class="form-label">{% translate "Update Status" %}</label>
+                            {{ status_form.status }}
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check"></i> {% translate "Update Status" %}
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'suppliers:order_print' order.id %}" class="btn btn-outline-primary" target="_blank">
+                            <i class="fas fa-print"></i> {% translate "Print Order" %}
+                        </a>
+                        
+                        {% if order.can_be_cancelled %}
+                        <a href="{% url 'suppliers:order_cancel' order.id %}" class="btn btn-outline-danger">
+                            <i class="fas fa-times"></i> {% translate "Cancel Order" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% translate "Order Timeline" %}</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="timeline">
+                        <li class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">{% translate "Order Created" %}</h6>
+                                <small class="text-muted">{{ order.created_at|date:"d M Y H:i" }}</small>
+                            </div>
+                        </li>
+                        
+                        {% if order.submitted_at %}
+                        <li class="timeline-item">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">{% translate "Order Submitted" %}</h6>
+                                <small class="text-muted">{{ order.submitted_at|date:"d M Y H:i" }}</small>
+                            </div>
+                        </li>
+                        {% endif %}
+                        
+                        {% if order.status == 'CONFIRMED' %}
+                        <li class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">{% translate "Order Confirmed" %}</h6>
+                                <small class="text-muted">{{ order.updated_at|date:"d M Y H:i" }}</small>
+                            </div>
+                        </li>
+                        {% endif %}
+                        
+                        {% if order.status == 'PROCESSING' %}
+                        <li class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">{% translate "Processing" %}</h6>
+                                <small class="text-muted">{{ order.updated_at|date:"d M Y H:i" }}</small>
+                            </div>
+                        </li>
+                        {% endif %}
+                        
+                        {% if order.status == 'READY' %}
+                        <li class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">{% translate "Ready for Delivery" %}</h6>
+                                <small class="text-muted">{{ order.updated_at|date:"d M Y H:i" }}</small>
+                            </div>
+                        </li>
+                        {% endif %}
+                        
+                        {% if order.status == 'DELIVERING' %}
+                        <li class="timeline-item">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">{% translate "Out for Delivery" %}</h6>
+                                <small class="text-muted">{{ order.updated_at|date:"d M Y H:i" }}</small>
+                            </div>
+                        </li>
+                        {% endif %}
+                        
+                        {% if order.status == 'DELIVERED' %}
+                        <li class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">{% translate "Delivered" %}</h6>
+                                <small class="text-muted">{{ order.updated_at|date:"d M Y H:i" }}</small>
+                            </div>
+                        </li>
+                        {% endif %}
+                        
+                        {% if order.status == 'CANCELLED' %}
+                        <li class="timeline-item">
+                            <div class="timeline-marker bg-danger"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">{% translate "Cancelled" %}</h6>
+                                <small class="text-muted">{{ order.updated_at|date:"d M Y H:i" }}</small>
+                            </div>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 1.5rem;
+        list-style: none;
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 1.5rem;
+    }
+    .timeline-item:last-child {
+        padding-bottom: 0;
+    }
+    .timeline-marker {
+        position: absolute;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        left: -1.5rem;
+        top: 0.25rem;
+    }
+    .timeline-item:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: -1.1rem;
+        top: 0.75rem;
+        height: 100%;
+        width: 2px;
+        background-color: #e9ecef;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add Bootstrap form classes to Django form fields
+    document.addEventListener('DOMContentLoaded', function() {
+        const formControls = document.querySelectorAll('select');
+        formControls.forEach(function(element) {
+            element.classList.add('form-select');
+        });
+    });
+</script>
+{% endblock %}

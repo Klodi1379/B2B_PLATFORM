@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Checkout" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">{% trans "Checkout" %}</h1>
+        <a href="{% url 'shops:cart_view' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>{% trans "Back to Cart" %}
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Order Summary -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Order Summary" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="60">{% trans "Image" %}</th>
+                                    <th>{% trans "Product" %}</th>
+                                    <th>{% trans "Price" %}</th>
+                                    <th width="80">{% trans "Quantity" %}</th>
+                                    <th class="text-end">{% trans "Subtotal" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in cart_items %}
+                                    <tr>
+                                        <td>
+                                            {% if item.product.image %}
+                                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                                    <i class="fas fa-box text-secondary"></i>
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="fw-medium">{{ item.product.name }}</div>
+                                            <div class="small text-muted">{{ item.supplier.company_name }}</div>
+                                        </td>
+                                        <td>
+                                            {% if item.product.discount_price %}
+                                                <div class="fw-medium text-success">{{ item.product.discount_price }} ALL</div>
+                                                <div class="small text-muted text-decoration-line-through">{{ item.product.price }} ALL</div>
+                                            {% else %}
+                                                <div class="fw-medium">{{ item.product.price }} ALL</div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="text-center">{{ item.quantity }}</div>
+                                        </td>
+                                        <td class="text-end fw-medium">{{ item.get_subtotal }} ALL</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="4" class="text-end fw-medium">{% trans "Total" %}</td>
+                                    <td class="text-end fw-bold">{{ cart_total }} ALL</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suppliers Summary -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Order Details by Supplier" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for supplier, supplier_items in items_by_supplier.items %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="d-flex align-items-center">
+                                        {% if supplier.logo %}
+                                            <img src="{{ supplier.logo.url }}" alt="{{ supplier.company_name }}" class="me-3 rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light rounded d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; font-size: 16px;">
+                                                {{ supplier.company_name|slice:":2"|upper }}
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <h6 class="mb-0">{{ supplier.company_name }}</h6>
+                                            <div class="small text-muted">{{ supplier_items|length }} {% trans "products" %}</div>
+                                        </div>
+                                    </div>
+                                    <div class="fw-bold">
+                                        {{ supplier_totals|get_item:supplier.id }} ALL
+                                    </div>
+                                </div>
+                                <div class="small mb-2">
+                                    <i class="fas fa-info-circle text-primary me-1"></i>
+                                    {% trans "This will be processed as a separate order" %}
+                                </div>
+                                <div>
+                                    {% for item in supplier_items %}
+                                        <span class="badge bg-light text-dark me-2 mb-2">
+                                            {{ item.product.name }} ({{ item.quantity }}x)
+                                        </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkout Form -->
+        <div class="col-lg-4">
+            <div class="card sticky-top" style="top: 20px; z-index: 100;">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Complete Your Order" %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'shops:checkout_complete' %}" id="checkout-form">
+                        {% csrf_token %}
+                        
+                        <!-- Contact Information -->
+                        <div class="mb-4">
+                            <h6 class="fw-medium">{% trans "Contact Information" %}</h6>
+                            <div class="mb-3">
+                                <label for="contact_name" class="form-label">{% trans "Contact Person" %}<span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="contact_name" name="contact_name" value="{{ user.get_full_name }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="contact_phone" class="form-label">{% trans "Phone Number" %}<span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="contact_phone" name="contact_phone" value="{{ shop.phone }}" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Delivery Address -->
+                        <div class="mb-4">
+                            <h6 class="fw-medium">{% trans "Delivery Address" %}</h6>
+                            <div class="mb-3">
+                                <label for="address" class="form-label">{% trans "Address" %}<span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="address" name="address" value="{{ shop.address }}" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label for="city" class="form-label">{% trans "City" %}<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="city" name="city" value="{{ shop.city }}" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="postal_code" class="form-label">{% trans "Postal Code" %}</label>
+                                    <input type="text" class="form-control" id="postal_code" name="postal_code" value="{{ shop.postal_code }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Order Notes -->
+                        <div class="mb-4">
+                            <h6 class="fw-medium">{% trans "Order Notes" %}</h6>
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">{% trans "Additional Instructions" %}</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="{% trans 'Special delivery instructions, preferred delivery time, etc.' %}"></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Method -->
+                        <div class="mb-4">
+                            <h6 class="fw-medium">{% trans "Payment Method" %}</h6>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment_cash" value="CASH" checked>
+                                    <label class="form-check-label" for="payment_cash">
+                                        <i class="fas fa-money-bill-wave me-2"></i>{% trans "Cash on Delivery" %}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment_bank" value="BANK_TRANSFER">
+                                    <label class="form-check-label" for="payment_bank">
+                                        <i class="fas fa-university me-2"></i>{% trans "Bank Transfer" %}
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="payment_method" id="payment_credit" value="CREDIT">
+                                    <label class="form-check-label" for="payment_credit">
+                                        <i class="fas fa-credit-card me-2"></i>{% trans "Credit (Approved Accounts)" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Terms & Conditions -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    {% trans "I agree to the" %} <a href="{% url 'common:terms' %}" target="_blank">{% trans "Terms and Conditions" %}</a>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Order Summary -->
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <h6 class="fw-medium mb-3">{% trans "Order Summary" %}</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>{% trans "Total Items" %}</span>
+                                    <span>{{ cart_items|length }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>{% trans "Number of Suppliers" %}</span>
+                                    <span>{{ items_by_supplier.keys|length }}</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>{% trans "Total" %}</span>
+                                    <span>{{ cart_total }} ALL</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check-circle me-2"></i>{% trans "Place Order" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkoutForm = document.getElementById('checkout-form');
+        
+        checkoutForm.addEventListener('submit', function(event) {
+            // Simple form validation
+            const contactName = document.getElementById('contact_name');
+            const contactPhone = document.getElementById('contact_phone');
+            const address = document.getElementById('address');
+            const city = document.getElementById('city');
+            const termsCheckbox = document.getElementById('terms');
+            
+            let isValid = true;
+            
+            // Simple required field validation
+            [contactName, contactPhone, address, city].forEach(field => {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            // Terms checkbox
+            if (!termsCheckbox.checked) {
+                termsCheckbox.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                termsCheckbox.classList.remove('is-invalid');
+            }
+            
+            if (!isValid) {
+                event.preventDefault();
+                
+                // Show validation message
+                const alertElement = document.createElement('div');
+                alertElement.className = 'alert alert-danger mt-3';
+                alertElement.textContent = '{% trans "Please fill in all required fields and accept the terms and conditions" %}';
+                
+                const formButtonContainer = checkoutForm.querySelector('.d-grid');
+                formButtonContainer.parentNode.insertBefore(alertElement, formButtonContainer);
+                
+                // Remove alert after 3 seconds
+                setTimeout(() => {
+                    alertElement.remove();
+                }, 3000);
+            } else {
+                // Disable button to prevent double submission
+                const submitButton = checkoutForm.querySelector('button[type="submit"]');
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> {% trans "Processing..." %}';
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,44 @@
+{% load i18n %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <h5>Lidhje Biznesi</h5>
+            <p class="text-muted">
+                {% trans "B2B platform connecting retailers and suppliers" %}
+            </p>
+        </div>
+        <div class="col-md-4">
+            <h5>{% trans "Quick Links" %}</h5>
+            <ul class="list-unstyled">
+                <li><a href="{% url 'users:dashboard' %}">{% trans "Dashboard" %}</a></li>
+                {% if user.is_authenticated %}
+                    {% if user.is_supplier %}
+                        <li><a href="{% url 'suppliers:catalog_list' %}">{% trans "Catalog" %}</a></li>
+                        <li><a href="{% url 'suppliers:order_list' %}">{% trans "Orders" %}</a></li>
+                    {% elif user.is_shop %}
+                        <li><a href="{% url 'shops:supplier_list' %}">{% trans "Suppliers" %}</a></li>
+                        <li><a href="{% url 'shops:order_list' %}">{% trans "Orders" %}</a></li>
+                    {% endif %}
+                {% else %}
+                    <li><a href="{% url 'login' %}">{% trans "Login" %}</a></li>
+                    <li><a href="{% url 'users:register' %}">{% trans "Register" %}</a></li>
+                {% endif %}
+                <li><a href="#">{% trans "About" %}</a></li>
+                <li><a href="#">{% trans "Contact" %}</a></li>
+            </ul>
+        </div>
+        <div class="col-md-4">
+            <h5>{% trans "Contact Us" %}</h5>
+            <address>
+                <i class="fa fa-map-marker-alt"></i> Tirana, Albania<br>
+                <i class="fa fa-phone"></i> +355 XX XXX XXXX<br>
+                <i class="fa fa-envelope"></i> info@lidhjebiznesi.al
+            </address>
+        </div>
+    </div>
+    <hr>
+    <div class="text-center">
+        <p class="mb-0">&copy; {% now "Y" %} Lidhje Biznesi. {% trans "All rights reserved." %}</p>
+    </div>
+</div>

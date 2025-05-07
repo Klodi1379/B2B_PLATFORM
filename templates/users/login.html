@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}Kyçu | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="text-center mb-4">
+                <h2 class="h3 fw-bold">Kyçu në llogarinë tënde</h2>
+                <p class="text-muted">
+                    Ose
+                    <a href="{% url 'users:register' %}" class="text-primary">
+                        regjistrohuni për një llogari të re
+                    </a>
+                </p>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <form action="{% url 'login' %}" method="post">
+                        {% csrf_token %}
+
+                        {% if form.errors %}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fa fa-exclamation-circle me-2"></i>
+                                {% if form.non_field_errors %}
+                                    {% for error in form.non_field_errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                {% else %}
+                                    Ju lutemi kontrolloni të dhënat e vendosura.
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}" role="alert">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fa fa-envelope text-muted"></i>
+                                </span>
+                                <input type="email" name="username" id="id_username" class="form-control {% if form.username.errors %}is-invalid{% endif %}" placeholder="email@example.com" required autofocus>
+                                {% if form.username.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.username.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label for="id_password" class="form-label">Fjalëkalimi</label>
+                                <a href="{% url 'users:password_reset' %}" class="text-decoration-none small">
+                                    Keni harruar fjalëkalimin?
+                                </a>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fa fa-lock text-muted"></i>
+                                </span>
+                                <input type="password" name="password" id="id_password" class="form-control {% if form.password.errors %}is-invalid{% endif %}" placeholder="••••••••" required>
+                                {% if form.password.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.password.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                                <label class="form-check-label" for="remember">
+                                    Më mbaj mend
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fa fa-sign-in-alt me-2"></i> Kyçu
+                            </button>
+                        </div>
+
+                        <input type="hidden" name="next" value="{{ next }}">
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-muted">
+                    Nuk keni një llogari? <a href="{% url 'users:register' %}" class="text-primary">Regjistrohuni tani</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

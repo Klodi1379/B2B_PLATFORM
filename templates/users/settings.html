@@ -1,0 +1,460 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Account Settings" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-3 mb-4">
+            <!-- Profile Sidebar -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    {% if user.profile.avatar %}
+                        <img src="{{ user.profile.avatar.url }}" alt="{{ user.get_full_name }}" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px; font-size: 40px;">
+                            {{ user.get_initials }}
+                        </div>
+                    {% endif %}
+                    
+                    <h5 class="mb-1">{{ user.get_full_name }}</h5>
+                    <p class="text-muted">
+                        {% if is_supplier %}
+                            {% trans "Supplier" %}
+                        {% else %}
+                            {% trans "Shop Owner" %}
+                        {% endif %}
+                    </p>
+                    
+                    <div class="d-grid">
+                        <a href="{% url 'users:edit_profile' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-edit me-2"></i>{% trans "Edit Profile" %}
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'users:profile' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-user me-2"></i>{% trans "Profile" %}
+                    </a>
+                    <a href="{% url 'users:settings' %}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-cog me-2"></i>{% trans "Account Settings" %}
+                    </a>
+                    <a href="{% url 'users:change_password' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-key me-2"></i>{% trans "Change Password" %}
+                    </a>
+                    {% if is_supplier %}
+                        <a href="{% url 'suppliers:dashboard' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-tachometer-alt me-2"></i>{% trans "Supplier Dashboard" %}
+                        </a>
+                    {% else %}
+                        <a href="{% url 'shops:dashboard' %}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-tachometer-alt me-2"></i>{% trans "Shop Dashboard" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <!-- Notification Settings -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Notification Settings" %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'users:update_notification_settings' %}">
+                        {% csrf_token %}
+                        
+                        {% if notification_settings_updated %}
+                            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                                {% trans "Notification settings updated successfully." %}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+                        
+                        <h6 class="text-muted mb-3">{% trans "Email Notifications" %}</h6>
+                        
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="email_order_updates" name="email_order_updates" {% if notification_settings.email_order_updates %}checked{% endif %}>
+                            <label class="form-check-label" for="email_order_updates">
+                                {% if is_supplier %}
+                                    {% trans "Receive email when a new order is placed" %}
+                                {% else %}
+                                    {% trans "Receive email updates about your orders" %}
+                                {% endif %}
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="email_delivery_updates" name="email_delivery_updates" {% if notification_settings.email_delivery_updates %}checked{% endif %}>
+                            <label class="form-check-label" for="email_delivery_updates">
+                                {% if is_supplier %}
+                                    {% trans "Receive email delivery schedule confirmations" %}
+                                {% else %}
+                                    {% trans "Receive email notifications when deliveries are scheduled" %}
+                                {% endif %}
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="email_messages" name="email_messages" {% if notification_settings.email_messages %}checked{% endif %}>
+                            <label class="form-check-label" for="email_messages">
+                                {% trans "Receive email when you get a new message" %}
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="email_system" name="email_system" {% if notification_settings.email_system %}checked{% endif %}>
+                            <label class="form-check-label" for="email_system">
+                                {% trans "Receive system announcements and updates" %}
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="email_marketing" name="email_marketing" {% if notification_settings.email_marketing %}checked{% endif %}>
+                            <label class="form-check-label" for="email_marketing">
+                                {% trans "Receive marketing and promotional emails" %}
+                            </label>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h6 class="text-muted mb-3">{% trans "In-App Notifications" %}</h6>
+                        
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="app_order_updates" name="app_order_updates" {% if notification_settings.app_order_updates %}checked{% endif %}>
+                            <label class="form-check-label" for="app_order_updates">
+                                {% if is_supplier %}
+                                    {% trans "Notify when a new order is placed" %}
+                                {% else %}
+                                    {% trans "Notify about order status updates" %}
+                                {% endif %}
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="app_delivery_updates" name="app_delivery_updates" {% if notification_settings.app_delivery_updates %}checked{% endif %}>
+                            <label class="form-check-label" for="app_delivery_updates">
+                                {% if is_supplier %}
+                                    {% trans "Notify about delivery schedule changes" %}
+                                {% else %}
+                                    {% trans "Notify when deliveries are scheduled or updated" %}
+                                {% endif %}
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="app_messages" name="app_messages" {% if notification_settings.app_messages %}checked{% endif %}>
+                            <label class="form-check-label" for="app_messages">
+                                {% trans "Notify when you receive a new message" %}
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="app_system" name="app_system" {% if notification_settings.app_system %}checked{% endif %}>
+                            <label class="form-check-label" for="app_system">
+                                {% trans "Notify about system announcements" %}
+                            </label>
+                        </div>
+                        
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>{% trans "Save Notification Settings" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Language and Regional Settings -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Language & Regional Settings" %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'users:update_regional_settings' %}">
+                        {% csrf_token %}
+                        
+                        {% if regional_settings_updated %}
+                            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                                {% trans "Regional settings updated successfully." %}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="language" class="form-label">{% trans "Language" %}</label>
+                                <select class="form-select" id="language" name="language">
+                                    <option value="sq" {% if regional_settings.language == 'sq' %}selected{% endif %}>{% trans "Albanian" %}</option>
+                                    <option value="en" {% if regional_settings.language == 'en' %}selected{% endif %}>{% trans "English" %}</option>
+                                    <option value="it" {% if regional_settings.language == 'it' %}selected{% endif %}>{% trans "Italian" %}</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="time_zone" class="form-label">{% trans "Time Zone" %}</label>
+                                <select class="form-select" id="time_zone" name="time_zone">
+                                    <option value="Europe/Tirane" {% if regional_settings.time_zone == 'Europe/Tirane' %}selected{% endif %}>{% trans "Tirana (CET/CEST)" %}</option>
+                                    <option value="Europe/Brussels" {% if regional_settings.time_zone == 'Europe/Brussels' %}selected{% endif %}>{% trans "Brussels (CET/CEST)" %}</option>
+                                    <option value="UTC" {% if regional_settings.time_zone == 'UTC' %}selected{% endif %}>{% trans "UTC" %}</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date_format" class="form-label">{% trans "Date Format" %}</label>
+                                <select class="form-select" id="date_format" name="date_format">
+                                    <option value="DD/MM/YYYY" {% if regional_settings.date_format == 'DD/MM/YYYY' %}selected{% endif %}>{% trans "DD/MM/YYYY (e.g. 31/12/2023)" %}</option>
+                                    <option value="MM/DD/YYYY" {% if regional_settings.date_format == 'MM/DD/YYYY' %}selected{% endif %}>{% trans "MM/DD/YYYY (e.g. 12/31/2023)" %}</option>
+                                    <option value="YYYY-MM-DD" {% if regional_settings.date_format == 'YYYY-MM-DD' %}selected{% endif %}>{% trans "YYYY-MM-DD (e.g. 2023-12-31)" %}</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="time_format" class="form-label">{% trans "Time Format" %}</label>
+                                <select class="form-select" id="time_format" name="time_format">
+                                    <option value="24h" {% if regional_settings.time_format == '24h' %}selected{% endif %}>{% trans "24-hour (e.g. 14:30)" %}</option>
+                                    <option value="12h" {% if regional_settings.time_format == '12h' %}selected{% endif %}>{% trans "12-hour (e.g. 2:30 PM)" %}</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>{% trans "Save Regional Settings" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Privacy Settings -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Privacy Settings" %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'users:update_privacy_settings' %}">
+                        {% csrf_token %}
+                        
+                        {% if privacy_settings_updated %}
+                            <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                                {% trans "Privacy settings updated successfully." %}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="profile_visible" name="profile_visible" {% if privacy_settings.profile_visible %}checked{% endif %}>
+                            <label class="form-check-label" for="profile_visible">
+                                {% if is_supplier %}
+                                    {% trans "Make my supplier profile visible to all shops" %}
+                                {% else %}
+                                    {% trans "Make my shop profile visible to suppliers" %}
+                                {% endif %}
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="contact_info_visible" name="contact_info_visible" {% if privacy_settings.contact_info_visible %}checked{% endif %}>
+                            <label class="form-check-label" for="contact_info_visible">
+                                {% trans "Show my contact information to connected businesses" %}
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3 form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="activity_tracking" name="activity_tracking" {% if privacy_settings.activity_tracking %}checked{% endif %}>
+                            <label class="form-check-label" for="activity_tracking">
+                                {% trans "Allow tracking of my activity for service improvements" %}
+                            </label>
+                            <div class="form-text small">
+                                {% trans "This helps us improve our platform and recommendations. We never share your individual data with third parties." %}
+                            </div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>{% trans "Save Privacy Settings" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Two-Factor Authentication -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Two-Factor Authentication" %}</h5>
+                </div>
+                <div class="card-body">
+                    {% if tfa_enabled %}
+                        <div class="alert alert-success mb-4">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            {% trans "Two-factor authentication is currently enabled for your account." %}
+                        </div>
+                        
+                        <p>{% trans "Two-factor authentication adds an extra layer of security to your account by requiring a verification code from your mobile device in addition to your password." %}</p>
+                        
+                        <div class="text-end">
+                            <a href="{% url 'users:disable_tfa' %}" class="btn btn-danger">
+                                <i class="fas fa-shield-alt me-2"></i>{% trans "Disable Two-Factor Authentication" %}
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning mb-4">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {% trans "Two-factor authentication is currently disabled for your account." %}
+                        </div>
+                        
+                        <p>{% trans "Two-factor authentication adds an extra layer of security to your account by requiring a verification code from your mobile device in addition to your password." %}</p>
+                        
+                        <div class="text-end">
+                            <a href="{% url 'users:enable_tfa' %}" class="btn btn-success">
+                                <i class="fas fa-shield-alt me-2"></i>{% trans "Enable Two-Factor Authentication" %}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Danger Zone -->
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">{% trans "Danger Zone" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h6>{% trans "Delete Account" %}</h6>
+                        <p class="text-muted">{% trans "Permanently delete your account and all associated data." %}</p>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            {% trans "Warning: This action cannot be undone. All your data, including order history, product catalog, and personal information will be permanently deleted." %}
+                        </div>
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                            <i class="fas fa-trash me-2"></i>{% trans "Delete Account" %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">{% trans "Delete Account" %}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {% trans "Warning: This action will permanently delete your account and cannot be undone." %}
+                    </div>
+                    <p>{% trans "Please read the following carefully:" %}</p>
+                    <ul>
+                        <li>{% trans "All your data will be permanently deleted, including order history, product catalog, and personal information." %}</li>
+                        <li>{% trans "This action cannot be undone." %}</li>
+                        <li>{% trans "Any open orders will need to be completed or cancelled prior to account deletion." %}</li>
+                    </ul>
+                </div>
+                
+                <form method="post" action="{% url 'users:delete_account' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="delete_confirm" class="form-label">{% trans "Please type 'DELETE' to confirm:" %}</label>
+                        <input type="text" class="form-control" id="delete_confirm" name="delete_confirm" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="delete_reason" class="form-label">{% trans "Please tell us why you're leaving (optional):" %}</label>
+                        <textarea class="form-control" id="delete_reason" name="delete_reason" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="delete_confirmation" name="delete_confirmation" required>
+                        <label class="form-check-label" for="delete_confirmation">
+                            {% trans "I understand that this action is permanent and cannot be undone." %}
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <button type="button" class="btn btn-danger" id="delete-account-btn">
+                    <i class="fas fa-trash me-2"></i>{% trans "Permanently Delete Account" %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Delete account validation
+        const deleteAccountBtn = document.getElementById('delete-account-btn');
+        const deleteForm = document.querySelector('#deleteAccountModal form');
+        const deleteConfirmInput = document.getElementById('delete_confirm');
+        const deleteConfirmCheckbox = document.getElementById('delete_confirmation');
+        
+        if (deleteAccountBtn) {
+            deleteAccountBtn.addEventListener('click', function() {
+                if (deleteConfirmInput.value === 'DELETE' && deleteConfirmCheckbox.checked) {
+                    // Show loading state
+                    deleteAccountBtn.disabled = true;
+                    deleteAccountBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> {% trans "Processing..." %}';
+                    
+                    // Submit the form
+                    deleteForm.submit();
+                } else {
+                    // Show error
+                    deleteConfirmInput.classList.add('is-invalid');
+                    
+                    // Add error message if it doesn't exist
+                    if (!document.getElementById('delete-confirm-error')) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.id = 'delete-confirm-error';
+                        errorDiv.className = 'invalid-feedback';
+                        errorDiv.textContent = '{% trans "Please type DELETE exactly as shown and check the confirmation box." %}';
+                        deleteConfirmInput.parentNode.appendChild(errorDiv);
+                    }
+                }
+            });
+            
+            // Clear validation on input change
+            deleteConfirmInput.addEventListener('input', function() {
+                if (deleteConfirmInput.classList.contains('is-invalid')) {
+                    deleteConfirmInput.classList.remove('is-invalid');
+                }
+            });
+            
+            deleteConfirmCheckbox.addEventListener('change', function() {
+                if (deleteConfirmInput.classList.contains('is-invalid')) {
+                    deleteConfirmInput.classList.remove('is-invalid');
+                }
+            });
+        }
+        
+        // Auto-dismiss alerts after 5 seconds
+        const alerts = document.querySelectorAll('.alert:not(.alert-warning):not(.alert-danger)');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                const closeBtn = alert.querySelector('.btn-close');
+                if (closeBtn) {
+                    closeBtn.click();
+                }
+            }, 5000);
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

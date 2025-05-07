@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Home" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded-3 mb-4">
+    <div class="container">
+        <h1 class="display-4">{% trans "Lidhje Biznesi" %}</h1>
+        <p class="lead">
+            {% trans "The digital platform that empowers local B2B commerce in Albania and selected European cities." %}
+        </p>
+        <hr class="my-4">
+        <p>
+            {% trans "Connect retailers and suppliers with an efficient, transparent, and simple platform." %}
+        </p>
+        {% if not user.is_authenticated %}
+            <div class="mt-4">
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg me-2">
+                    <i class="fa fa-sign-in-alt me-2"></i> {% trans "Log In" %}
+                </a>
+                <a href="{% url 'users:register' %}" class="btn btn-success btn-lg">
+                    <i class="fa fa-user-plus me-2"></i> {% trans "Register" %}
+                </a>
+            </div>
+        {% else %}
+            <div class="mt-4">
+                <a href="{% url 'users:dashboard' %}" class="btn btn-primary btn-lg">
+                    <i class="fa fa-tachometer-alt me-2"></i> {% trans "Go to Dashboard" %}
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fa fa-store fa-4x mb-3 text-primary"></i>
+                    <h3 class="card-title">{% trans "For Shops" %}</h3>
+                    <p class="card-text">
+                        {% trans "Save time with faster ordering, access unified catalogs, and enjoy basic transparency on stock and prices." %}
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-0 text-center">
+                    <a href="{% url 'users:register_user_type' user_type='shop' %}" class="btn btn-outline-primary">
+                        {% trans "Register as Shop" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fa fa-building fa-4x mb-3 text-success"></i>
+                    <h3 class="card-title">{% trans "For Suppliers" %}</h3>
+                    <p class="card-text">
+                        {% trans "Save time with digital order processing, reduce errors, and optimize delivery routes for maximum efficiency." %}
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-0 text-center">
+                    <a href="{% url 'users:register_user_type' user_type='supplier' %}" class="btn btn-outline-success">
+                        {% trans "Register as Supplier" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fa fa-truck fa-4x mb-3 text-warning"></i>
+                    <h3 class="card-title">{% trans "For Drivers" %}</h3>
+                    <p class="card-text">
+                        {% trans "Get optimized delivery routes, clear delivery lists, and easy status updates for deliveries." %}
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-0 text-center">
+                    <a href="{% url 'common:contact' %}" class="btn btn-outline-warning">
+                        {% trans "Contact Us" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <h2>{% trans "How It Works" %}</h2>
+            <div class="accordion" id="howItWorksAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingOne">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                            {% trans "For Retailers/Shops" %}
+                        </button>
+                    </h2>
+                    <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#howItWorksAccordion">
+                        <div class="accordion-body">
+                            <ol>
+                                <li>{% trans "Register your shop on our platform" %}</li>
+                                <li>{% trans "Browse catalogs from local suppliers" %}</li>
+                                <li>{% trans "Add products to your cart and place orders" %}</li>
+                                <li>{% trans "Track your order status and deliveries" %}</li>
+                                <li>{% trans "Easily reorder products with one click" %}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingTwo">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            {% trans "For Suppliers/Distributors" %}
+                        </button>
+                    </h2>
+                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#howItWorksAccordion">
+                        <div class="accordion-body">
+                            <ol>
+                                <li>{% trans "Register your business and create your digital catalog" %}</li>
+                                <li>{% trans "Receive and manage digital orders from shops" %}</li>
+                                <li>{% trans "Process orders and prepare deliveries" %}</li>
+                                <li>{% trans "Plan optimized delivery routes" %}</li>
+                                <li>{% trans "Get insights about your business and clients" %}</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <h2>{% trans "Benefits" %}</h2>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fa fa-clock text-primary me-2"></i> {% trans "Save Time" %}</h5>
+                    <p class="card-text">
+                        {% trans "Digital ordering process saves time for both retailers and suppliers." %}
+                    </p>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fa fa-check-circle text-success me-2"></i> {% trans "Reduce Errors" %}</h5>
+                    <p class="card-text">
+                        {% trans "Digital orders eliminate miscommunication and reduce costly mistakes." %}
+                    </p>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fa fa-route text-info me-2"></i> {% trans "Optimize Deliveries" %}</h5>
+                    <p class="card-text">
+                        {% trans "Plan efficient delivery routes to save fuel and deliver more orders." %}
+                    </p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fa fa-chart-line text-warning me-2"></i> {% trans "Grow Your Business" %}</h5>
+                    <p class="card-text">
+                        {% trans "Access data and insights to make better business decisions." %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-5">
+        <div class="col-md-12 text-center">
+            <h2>{% trans "Ready to Get Started?" %}</h2>
+            <p class="lead">
+                {% trans "Join Lidhje Biznesi today and transform your B2B operations." %}
+            </p>
+            {% if not user.is_authenticated %}
+                <div class="mt-4">
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-lg me-2">
+                        <i class="fa fa-sign-in-alt me-2"></i> {% trans "Log In" %}
+                    </a>
+                    <a href="{% url 'users:register' %}" class="btn btn-success btn-lg">
+                        <i class="fa fa-user-plus me-2"></i> {% trans "Register" %}
+                    </a>
+                </div>
+            {% else %}
+                <div class="mt-4">
+                    <a href="{% url 'users:dashboard' %}" class="btn btn-primary btn-lg">
+                        <i class="fa fa-tachometer-alt me-2"></i> {% trans "Go to Dashboard" %}
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

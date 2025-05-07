@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Furnitorët | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="h3">Furnitorët</h1>
+            <p class="text-muted">Zgjidh një furnitor për të shfletuar produktet e tij.</p>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <form method="get" action="{% url 'shops:supplier_list' %}">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light">
+                                <i class="fa fa-search text-muted"></i>
+                            </span>
+                            <input type="text" name="q" id="q" value="{{ request.GET.q|default:'' }}"
+                                   class="form-control"
+                                   placeholder="Kërko sipas emrit ose kategorisë...">
+                            {% if request.GET.q %}
+                            <button type="button" class="btn btn-outline-secondary"
+                                    onclick="window.location.href='{% url 'shops:supplier_list' %}'">
+                                <i class="fa fa-times"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="d-flex justify-content-end gap-3">
+                        <div>
+                            <label for="category-filter" class="visually-hidden">Filtro sipas kategorisë</label>
+                            <select id="category-filter" name="category"
+                                    class="form-select"
+                                    onchange="location = this.value;">
+                                <option value="{% url 'shops:supplier_list' %}">Të gjitha kategoritë</option>
+                                {% for category in categories %}
+                                <option value="{% url 'shops:supplier_list' %}?category={{ category.slug }}" {% if request.GET.category == category.slug %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <a href="{% url 'shops:supplier_add' %}" class="btn btn-primary">
+                            <i class="fa fa-plus me-2"></i> Shto Furnitor
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Suppliers List -->
+    <div class="card">
+        <div class="card-body p-0">
+            {% if suppliers %}
+                <ul class="list-group list-group-flush">
+                    {% for supplier in suppliers %}
+                        <li class="list-group-item p-4">
+                            <a href="{% url 'shops:supplier_catalog' supplier.id %}" class="text-decoration-none text-dark">
+                                <div class="row align-items-center">
+                                    <div class="col-md-1">
+                                        <div class="rounded-circle overflow-hidden" style="width: 64px; height: 64px;">
+                                            {% if supplier.logo %}
+                                                <img class="img-fluid" src="{{ supplier.logo.url }}" alt="{{ supplier.name }}">
+                                            {% else %}
+                                                <div class="d-flex align-items-center justify-content-center bg-primary text-white h-100 fs-4 fw-bold">
+                                                    {{ supplier.name|slice:":2"|upper }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h5 class="mb-0">{{ supplier.name }}</h5>
+                                            <div>
+                                                {% for category in supplier.categories.all %}
+                                                    <span class="badge bg-primary rounded-pill me-1">
+                                                        {{ category.name }}
+                                                    </span>
+                                                {% empty %}
+                                                    <span class="text-muted">Pa kategori</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <p class="mb-1">{{ supplier.description|truncatechars:150 }}</p>
+                                        <div class="text-muted small mt-2">
+                                            <i class="fa fa-box me-1"></i>
+                                            <span>{{ supplier.product_count }} produkte në katalog</span>
+                                            {% if supplier.is_connected %}
+                                            <span class="mx-2">&middot;</span>
+                                            <span>{{ supplier.orders_count }} porosi të kryera</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3 text-end">
+                                        {% if supplier.is_connected %}
+                                            <span class="badge bg-success mb-3 d-inline-flex align-items-center">
+                                                <i class="fa fa-check me-1"></i> I lidhur
+                                            </span>
+                                        {% else %}
+                                            <a href="{% url 'shops:supplier_add' %}?supplier_id={{ supplier.id }}" class="btn btn-sm btn-primary mb-3">
+                                                <i class="fa fa-link me-1"></i> Lidhu
+                                            </a>
+                                        {% endif %}
+                                        <div>
+                                            <a href="{% url 'shops:supplier_catalog' supplier.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fa fa-box me-1"></i> Shiko Produktet
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <!-- Pagination -->
+                {% if is_paginated %}
+                    {% include "partials/pagination.html" with page_obj=page_obj %}
+                {% endif %}
+            {% else %}
+                {% if request.GET.q or request.GET.category %}
+                    <div class="text-center py-5">
+                        <i class="fa fa-search fa-3x text-muted mb-3"></i>
+                        <h5>Nuk u gjet asnjë furnitor</h5>
+                        <p class="text-muted">Nuk ka furnitorë që përputhen me kriteret e kërkimit tuaj.</p>
+                        <div class="mt-4">
+                            <a href="{% url 'shops:supplier_list' %}" class="btn btn-primary">
+                                Pastro filtrat
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fa fa-building fa-3x text-muted mb-3"></i>
+                        <h5>Nuk ka furnitorë të disponueshëm</h5>
+                        <p class="text-muted">Nuk ka furnitorë të disponueshëm për dyqanin tuaj aktualisht.</p>
+                        <div class="mt-4">
+                            <a href="{% url 'shops:supplier_add' %}" class="btn btn-primary">
+                                <i class="fa fa-plus me-2"></i> Shto Furnitor
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

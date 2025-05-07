@@ -1,0 +1,420 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Register as Supplier" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-md-5">
+                    <div class="text-center mb-4">
+                        <img src="{% static 'img/logo.png' %}" alt="Lidhje Biznesi" class="mb-3" style="height: 60px;">
+                        <h1 class="h3 mb-3">{% trans "Register as Supplier" %}</h1>
+                        <p class="text-muted">{% trans "Create a supplier account to sell your products to local shops" %}</p>
+                    </div>
+                    
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                <strong>{% trans "Please correct the following errors:" %}</strong>
+                                <ul class="mb-0 pl-3">
+                                    {% for field in form %}
+                                        {% for error in field.errors %}
+                                            <li>{{ field.label }}: {{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                    {% for error in form.non_field_errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                        
+                        <!-- Account Information -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">{% trans "Account Information" %}</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="first_name" class="form-label">{% trans "First Name" %}<span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" id="first_name" name="first_name" value="{{ form.first_name.value|default:'' }}" required>
+                                        <div class="invalid-feedback">
+                                            {% for error in form.first_name.errors %}
+                                                {{ error }}
+                                            {% empty %}
+                                                {% trans "Please enter your first name" %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="last_name" class="form-label">{% trans "Last Name" %}<span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" id="last_name" name="last_name" value="{{ form.last_name.value|default:'' }}" required>
+                                        <div class="invalid-feedback">
+                                            {% for error in form.last_name.errors %}
+                                                {{ error }}
+                                            {% empty %}
+                                                {% trans "Please enter your last name" %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">{% trans "Email Address" %}<span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" id="email" name="email" value="{{ form.email.value|default:'' }}" required>
+                                    <div class="invalid-feedback">
+                                        {% for error in form.email.errors %}
+                                            {{ error }}
+                                        {% empty %}
+                                            {% trans "Please enter a valid email address" %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="password1" class="form-label">{% trans "Password" %}<span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control {% if form.password1.errors %}is-invalid{% endif %}" id="password1" name="password1" required>
+                                        <div class="invalid-feedback">
+                                            {% for error in form.password1.errors %}
+                                                {{ error }}
+                                            {% empty %}
+                                                {% trans "Please enter a password" %}
+                                            {% endfor %}
+                                        </div>
+                                        <div class="form-text small">
+                                            {% trans "Password must be at least 8 characters and contain letters, numbers, and special characters." %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="password2" class="form-label">{% trans "Confirm Password" %}<span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control {% if form.password2.errors %}is-invalid{% endif %}" id="password2" name="password2" required>
+                                        <div class="invalid-feedback">
+                                            {% for error in form.password2.errors %}
+                                                {{ error }}
+                                            {% empty %}
+                                                {% trans "Please confirm your password" %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="avatar" class="form-label">{% trans "Profile Image" %} <span class="text-muted">({% trans "Optional" %})</span></label>
+                                    <input type="file" class="form-control {% if form.avatar.errors %}is-invalid{% endif %}" id="avatar" name="avatar" accept="image/*">
+                                    <div class="invalid-feedback">
+                                        {% for error in form.avatar.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Company Information -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">{% trans "Company Information" %}</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="company_name" class="form-label">{% trans "Company Name" %}<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control {% if form.company_name.errors %}is-invalid{% endif %}" id="company_name" name="company_name" value="{{ form.company_name.value|default:'' }}" required>
+                                    <div class="invalid-feedback">
+                                        {% for error in form.company_name.errors %}
+                                            {{ error }}
+                                        {% empty %}
+                                            {% trans "Please enter your company name" %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="company_type" class="form-label">{% trans "Company Type" %}<span class="text-danger">*</span></label>
+                                    <select class="form-select {% if form.company_type.errors %}is-invalid{% endif %}" id="company_type" name="company_type" required>
+                                        <option value="" {% if not form.company_type.value %}selected{% endif %}>{% trans "Select company type" %}</option>
+                                        <option value="MANUFACTURER" {% if form.company_type.value == 'MANUFACTURER' %}selected{% endif %}>{% trans "Manufacturer" %}</option>
+                                        <option value="DISTRIBUTOR" {% if form.company_type.value == 'DISTRIBUTOR' %}selected{% endif %}>{% trans "Distributor" %}</option>
+                                        <option value="WHOLESALER" {% if form.company_type.value == 'WHOLESALER' %}selected{% endif %}>{% trans "Wholesaler" %}</option>
+                                        <option value="IMPORTER" {% if form.company_type.value == 'IMPORTER' %}selected{% endif %}>{% trans "Importer" %}</option>
+                                        <option value="OTHER" {% if form.company_type.value == 'OTHER' %}selected{% endif %}>{% trans "Other" %}</option>
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        {% for error in form.company_type.errors %}
+                                            {{ error }}
+                                        {% empty %}
+                                            {% trans "Please select company type" %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="categories" class="form-label">{% trans "Product Categories" %}<span class="text-danger">*</span></label>
+                                        <select class="form-select {% if form.categories.errors %}is-invalid{% endif %}" id="categories" name="categories" multiple required>
+                                            {% for category in categories %}
+                                                <option value="{{ category.id }}" {% if category.id in form.categories.value %}selected{% endif %}>{{ category.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <div class="form-text small">
+                                            {% trans "Hold Ctrl (or Cmd on Mac) to select multiple categories" %}
+                                        </div>
+                                        <div class="invalid-feedback">
+                                            {% for error in form.categories.errors %}
+                                                {{ error }}
+                                            {% empty %}
+                                                {% trans "Please select at least one category" %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="phone" class="form-label">{% trans "Phone Number" %}<span class="text-danger">*</span></label>
+                                        <input type="tel" class="form-control {% if form.phone.errors %}is-invalid{% endif %}" id="phone" name="phone" value="{{ form.phone.value|default:'' }}" required>
+                                        <div class="invalid-feedback">
+                                            {% for error in form.phone.errors %}
+                                                {{ error }}
+                                            {% empty %}
+                                                {% trans "Please enter valid phone number" %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="tax_id" class="form-label">{% trans "Tax ID/Company Registration Number" %}<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control {% if form.tax_id.errors %}is-invalid{% endif %}" id="tax_id" name="tax_id" value="{{ form.tax_id.value|default:'' }}" required>
+                                    <div class="invalid-feedback">
+                                        {% for error in form.tax_id.errors %}
+                                            {{ error }}
+                                        {% empty %}
+                                            {% trans "Please enter your tax ID" %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="vat_number" class="form-label">{% trans "VAT Number" %} <span class="text-muted">({% trans "If applicable" %})</span></label>
+                                    <input type="text" class="form-control {% if form.vat_number.errors %}is-invalid{% endif %}" id="vat_number" name="vat_number" value="{{ form.vat_number.value|default:'' }}">
+                                    <div class="invalid-feedback">
+                                        {% for error in form.vat_number.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="logo" class="form-label">{% trans "Company Logo" %} <span class="text-muted">({% trans "Optional" %})</span></label>
+                                    <input type="file" class="form-control {% if form.logo.errors %}is-invalid{% endif %}" id="logo" name="logo" accept="image/*">
+                                    <div class="form-text small">
+                                        {% trans "Recommended size: 400x400 pixels" %}
+                                    </div>
+                                    <div class="invalid-feedback">
+                                        {% for error in form.logo.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">{% trans "Company Description" %} <span class="text-muted">({% trans "Optional" %})</span></label>
+                                    <textarea class="form-control {% if form.description.errors %}is-invalid{% endif %}" id="description" name="description" rows="3">{{ form.description.value|default:'' }}</textarea>
+                                    <div class="invalid-feedback">
+                                        {% for error in form.description.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Address Information -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">{% trans "Business Address" %}</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="address" class="form-label">{% trans "Street Address" %}<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control {% if form.address.errors %}is-invalid{% endif %}" id="address" name="address" value="{{ form.address.value|default:'' }}" required>
+                                    <div class="invalid-feedback">
+                                        {% for error in form.address.errors %}
+                                            {{ error }}
+                                        {% empty %}
+                                            {% trans "Please enter your street address" %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="city" class="form-label">{% trans "City" %}<span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control {% if form.city.errors %}is-invalid{% endif %}" id="city" name="city" value="{{ form.city.value|default:'' }}" required>
+                                        <div class="invalid-feedback">
+                                            {% for error in form.city.errors %}
+                                                {{ error }}
+                                            {% empty %}
+                                                {% trans "Please enter your city" %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="postal_code" class="form-label">{% trans "Postal Code" %}<span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control {% if form.postal_code.errors %}is-invalid{% endif %}" id="postal_code" name="postal_code" value="{{ form.postal_code.value|default:'' }}" required>
+                                        <div class="invalid-feedback">
+                                            {% for error in form.postal_code.errors %}
+                                                {{ error }}
+                                            {% empty %}
+                                                {% trans "Please enter your postal code" %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="delivery_zones" class="form-label">{% trans "Delivery Zones" %}<span class="text-danger">*</span></label>
+                                    <select class="form-select {% if form.delivery_zones.errors %}is-invalid{% endif %}" id="delivery_zones" name="delivery_zones" multiple required>
+                                        {% for zone in delivery_zones %}
+                                            <option value="{{ zone.id }}" {% if zone.id in form.delivery_zones.value %}selected{% endif %}>{{ zone.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div class="form-text small">
+                                        {% trans "Hold Ctrl (or Cmd on Mac) to select multiple zones" %}
+                                    </div>
+                                    <div class="invalid-feedback">
+                                        {% for error in form.delivery_zones.errors %}
+                                            {{ error }}
+                                        {% empty %}
+                                            {% trans "Please select at least one delivery zone" %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Bank Information -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">{% trans "Bank Information" %}</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="bank_name" class="form-label">{% trans "Bank Name" %}<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control {% if form.bank_name.errors %}is-invalid{% endif %}" id="bank_name" name="bank_name" value="{{ form.bank_name.value|default:'' }}" required>
+                                    <div class="invalid-feedback">
+                                        {% for error in form.bank_name.errors %}
+                                            {{ error }}
+                                        {% empty %}
+                                            {% trans "Please enter your bank name" %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="account_number" class="form-label">{% trans "Account Number" %}<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control {% if form.account_number.errors %}is-invalid{% endif %}" id="account_number" name="account_number" value="{{ form.account_number.value|default:'' }}" required>
+                                    <div class="invalid-feedback">
+                                        {% for error in form.account_number.errors %}
+                                            {{ error }}
+                                        {% empty %}
+                                            {% trans "Please enter your account number" %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="swift_code" class="form-label">{% trans "SWIFT/BIC Code" %}<span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control {% if form.swift_code.errors %}is-invalid{% endif %}" id="swift_code" name="swift_code" value="{{ form.swift_code.value|default:'' }}" required>
+                                    <div class="invalid-feedback">
+                                        {% for error in form.swift_code.errors %}
+                                            {{ error }}
+                                        {% empty %}
+                                            {% trans "Please enter SWIFT/BIC code" %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Terms & Conditions -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input {% if form.terms.errors %}is-invalid{% endif %}" type="checkbox" id="terms" name="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    {% trans "I agree to the" %} <a href="{% url 'common:terms' %}" target="_blank">{% trans "Terms and Conditions" %}</a> {% trans "and" %} <a href="{% url 'common:privacy' %}" target="_blank">{% trans "Privacy Policy" %}</a>.
+                                </label>
+                                <div class="invalid-feedback">
+                                    {% for error in form.terms.errors %}
+                                        {{ error }}
+                                    {% empty %}
+                                        {% trans "You must agree to the terms and conditions" %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <div class="form-check">
+                                <input class="form-check-input {% if form.seller_agreement.errors %}is-invalid{% endif %}" type="checkbox" id="seller_agreement" name="seller_agreement" required>
+                                <label class="form-check-label" for="seller_agreement">
+                                    {% trans "I agree to the" %} <a href="{% url 'common:seller_agreement' %}" target="_blank">{% trans "Seller Agreement" %}</a>.
+                                </label>
+                                <div class="invalid-feedback">
+                                    {% for error in form.seller_agreement.errors %}
+                                        {{ error }}
+                                    {% empty %}
+                                        {% trans "You must agree to the seller agreement" %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                {% trans "Create Supplier Account" %}
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p>{% trans "Already have an account?" %} <a href="{% url 'login' %}">{% trans "Sign in" %}</a></p>
+                        <p>{% trans "Want to register as a shop?" %} <a href="{% url 'registration:shop_registration' %}">{% trans "Register as Shop" %}</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Client-side validation
+    document.addEventListener('DOMContentLoaded', function() {
+        // Example starter JavaScript for disabling form submissions if there are invalid fields
+        (function () {
+            'use strict'
+
+            // Fetch all the forms we want to apply custom Bootstrap validation styles to
+            var forms = document.querySelectorAll('.needs-validation')
+
+            // Loop over them and prevent submission
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    });
+</script>
+{% endblock %}
+{% endblock %}

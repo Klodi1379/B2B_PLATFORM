@@ -1,0 +1,554 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Edit Profile" %} | Lidhje Biznesi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-image-container {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin: 0 auto 1.5rem;
+        border: 4px solid rgba(78, 115, 223, 0.1);
+        position: relative;
+    }
+    
+    .profile-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .profile-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        color: #4e73df;
+        font-size: 3rem;
+    }
+    
+    .image-upload-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: white;
+        text-align: center;
+        padding: 0.5rem;
+        cursor: pointer;
+        font-size: 0.8rem;
+        transition: all 0.3s;
+        opacity: 0;
+    }
+    
+    .profile-image-container:hover .image-upload-overlay {
+        opacity: 1;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+    }
+    
+    .form-section-title {
+        border-bottom: 1px solid #e3e6f0;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'users:profile' %}">{% trans "Profile" %}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% trans "Edit Profile" %}</li>
+                </ol>
+            </nav>
+            <h1 class="h3">{% trans "Edit Your Profile" %}</h1>
+            <p class="text-muted">{% trans "Update your personal information and account settings" %}</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-3 mb-4">
+            <!-- Profile Image Upload -->
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="profile-image-container">
+                        {% if user.profile_image %}
+                            <img src="{{ user.profile_image.url }}" alt="{{ user.get_full_name }}" class="profile-image">
+                        {% else %}
+                            <div class="profile-image-placeholder">
+                                <i class="fa fa-user"></i>
+                            </div>
+                        {% endif %}
+                        <label for="id_profile_image" class="image-upload-overlay">
+                            <i class="fa fa-camera me-1"></i> {% trans "Change Photo" %}
+                        </label>
+                    </div>
+                    
+                    <h5 class="card-title">{{ user.get_full_name|default:user.username }}</h5>
+                    <p class="card-text text-muted">{{ user.email }}</p>
+                    
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{% url 'users:password_change' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fa fa-key me-1"></i> {% trans "Change Password" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Links -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">{% trans "Quick Links" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'users:profile' %}" class="list-group-item list-group-item-action">
+                            <i class="fa fa-user me-2"></i> {% trans "View Profile" %}
+                        </a>
+                        <a href="#account-info" class="list-group-item list-group-item-action">
+                            <i class="fa fa-id-card me-2"></i> {% trans "Account Information" %}
+                        </a>
+                        {% if user.is_supplier %}
+                        <a href="#supplier-info" class="list-group-item list-group-item-action">
+                            <i class="fa fa-building me-2"></i> {% trans "Supplier Details" %}
+                        </a>
+                        {% elif user.is_shop %}
+                        <a href="#shop-info" class="list-group-item list-group-item-action">
+                            <i class="fa fa-store me-2"></i> {% trans "Shop Details" %}
+                        </a>
+                        {% endif %}
+                        <a href="#preferences" class="list-group-item list-group-item-action">
+                            <i class="fa fa-cog me-2"></i> {% trans "Preferences" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <!-- Hidden file input for profile image -->
+                <input type="file" id="id_profile_image" name="profile_image" class="d-none" accept="image/*">
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <!-- Account Information -->
+                <div class="card mb-4" id="account-info">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fa fa-id-card me-2"></i>{% trans "Account Information" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">{% trans "First Name" %}</label>
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.first_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">{% trans "Last Name" %}</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.last_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">{% trans "Email Address" %}</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">{% trans "We'll never share your email with anyone else." %}</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.phone.id_for_label }}" class="form-label">{% trans "Phone Number" %}</label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.phone.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if user.is_supplier %}
+                <!-- Supplier Information -->
+                <div class="card mb-4" id="supplier-info">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fa fa-building me-2"></i>{% trans "Supplier Details" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ supplier_form.name.id_for_label }}" class="form-label">{% trans "Company Name" %}</label>
+                                {{ supplier_form.name }}
+                                {% if supplier_form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in supplier_form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ supplier_form.tax_id.id_for_label }}" class="form-label">{% trans "Tax ID" %}</label>
+                                {{ supplier_form.tax_id }}
+                                {% if supplier_form.tax_id.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in supplier_form.tax_id.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ supplier_form.address.id_for_label }}" class="form-label">{% trans "Address" %}</label>
+                                {{ supplier_form.address }}
+                                {% if supplier_form.address.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in supplier_form.address.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ supplier_form.city.id_for_label }}" class="form-label">{% trans "City" %}</label>
+                                {{ supplier_form.city }}
+                                {% if supplier_form.city.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in supplier_form.city.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ supplier_form.country.id_for_label }}" class="form-label">{% trans "Country" %}</label>
+                                {{ supplier_form.country }}
+                                {% if supplier_form.country.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in supplier_form.country.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ supplier_form.email.id_for_label }}" class="form-label">{% trans "Business Email" %}</label>
+                                {{ supplier_form.email }}
+                                {% if supplier_form.email.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in supplier_form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ supplier_form.phone.id_for_label }}" class="form-label">{% trans "Business Phone" %}</label>
+                                {{ supplier_form.phone }}
+                                {% if supplier_form.phone.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in supplier_form.phone.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% elif user.is_shop %}
+                <!-- Shop Information -->
+                <div class="card mb-4" id="shop-info">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fa fa-store me-2"></i>{% trans "Shop Details" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ shop_form.name.id_for_label }}" class="form-label">{% trans "Shop Name" %}</label>
+                                {{ shop_form.name }}
+                                {% if shop_form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in shop_form.name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ shop_form.shop_type.id_for_label }}" class="form-label">{% trans "Shop Type" %}</label>
+                                {{ shop_form.shop_type }}
+                                {% if shop_form.shop_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in shop_form.shop_type.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="{{ shop_form.address.id_for_label }}" class="form-label">{% trans "Address" %}</label>
+                                {{ shop_form.address }}
+                                {% if shop_form.address.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in shop_form.address.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ shop_form.city.id_for_label }}" class="form-label">{% trans "City" %}</label>
+                                {{ shop_form.city }}
+                                {% if shop_form.city.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in shop_form.city.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ shop_form.country.id_for_label }}" class="form-label">{% trans "Country" %}</label>
+                                {{ shop_form.country }}
+                                {% if shop_form.country.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in shop_form.country.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ shop_form.email.id_for_label }}" class="form-label">{% trans "Business Email" %}</label>
+                                {{ shop_form.email }}
+                                {% if shop_form.email.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in shop_form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ shop_form.phone.id_for_label }}" class="form-label">{% trans "Business Phone" %}</label>
+                                {{ shop_form.phone }}
+                                {% if shop_form.phone.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in shop_form.phone.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Preferences -->
+                <div class="card mb-4" id="preferences">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fa fa-cog me-2"></i>{% trans "Preferences" %}
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.language.id_for_label }}" class="form-label">{% trans "Language" %}</label>
+                                {{ form.language }}
+                                {% if form.language.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.language.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.timezone.id_for_label }}" class="form-label">{% trans "Timezone" %}</label>
+                                {{ form.timezone }}
+                                {% if form.timezone.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.timezone.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            {{ form.email_notifications }}
+                            <label class="form-check-label" for="{{ form.email_notifications.id_for_label }}">
+                                {% trans "Receive email notifications" %}
+                            </label>
+                            {% if form.email_notifications.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.email_notifications.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            {{ form.sms_notifications }}
+                            <label class="form-check-label" for="{{ form.sms_notifications.id_for_label }}">
+                                {% trans "Receive SMS notifications" %}
+                            </label>
+                            {% if form.sms_notifications.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.sms_notifications.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Submit Buttons -->
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'users:profile' %}" class="btn btn-outline-secondary">
+                        <i class="fa fa-times me-2"></i>{% trans "Cancel" %}
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa fa-save me-2"></i>{% trans "Save Changes" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add Bootstrap form styles to Django form fields
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add form-control class to input fields
+        const formControls = document.querySelectorAll('input[type="text"], input[type="email"], input[type="tel"], input[type="password"], textarea, select');
+        formControls.forEach(function(element) {
+            element.classList.add('form-control');
+        });
+        
+        // Add form-check-input class to checkboxes
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(function(element) {
+            element.classList.add('form-check-input');
+        });
+        
+        // Handle profile image upload
+        const profileImageContainer = document.querySelector('.profile-image-container');
+        const fileInput = document.getElementById('id_profile_image');
+        
+        if (profileImageContainer && fileInput) {
+            profileImageContainer.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const imageElement = document.querySelector('.profile-image');
+                        const placeholderElement = document.querySelector('.profile-image-placeholder');
+                        
+                        if (imageElement) {
+                            imageElement.src = e.target.result;
+                        } else if (placeholderElement) {
+                            placeholderElement.innerHTML = '';
+                            const newImage = document.createElement('img');
+                            newImage.src = e.target.result;
+                            newImage.classList.add('profile-image');
+                            placeholderElement.parentNode.replaceChild(newImage, placeholderElement);
+                        }
+                    }
+                    
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

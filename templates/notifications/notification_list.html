@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Notifications" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% trans "Notifications" %}</li>
+                </ol>
+            </nav>
+            <h1 class="h3">{% trans "Notifications" %}</h1>
+            <p class="text-muted">{% trans "Manage your notifications" %}</p>
+        </div>
+    </div>
+
+    <!-- Filters and Actions -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="type" class="form-label">{% trans "Type" %}</label>
+                            {{ filter_form.type }}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="read_status" class="form-label">{% trans "Status" %}</label>
+                            {{ filter_form.read_status }}
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-filter me-2"></i> {% trans "Filter" %}
+                            </button>
+                            <a href="{% url 'notifications:notification_list' %}" class="btn btn-outline-secondary ms-2">
+                                <i class="fa fa-times me-2"></i> {% trans "Clear" %}
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'notifications:notification_mark_all_read' %}" class="btn btn-outline-primary">
+                            <i class="fa fa-check-double me-2"></i> {% trans "Mark All as Read" %}
+                        </a>
+                        <a href="{% url 'notifications:notification_clear_all' %}" class="btn btn-outline-danger">
+                            <i class="fa fa-trash me-2"></i> {% trans "Clear Read Notifications" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% if notifications %}
+                            {% for notification in notifications %}
+                                <div class="list-group-item list-group-item-action {% if not notification.is_read %}bg-light{% endif %}">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3">
+                                                <i class="fa {{ notification.get_icon_class }} fa-2x text-{{ notification.type|lower }}"></i>
+                                            </div>
+                                            <div>
+                                                <h5 class="mb-1">{{ notification.title }}</h5>
+                                                <p class="mb-1">{{ notification.message }}</p>
+                                                <small class="text-muted">{{ notification.created_at|date:"j F Y, H:i" }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex">
+                                            <a href="{% url 'notifications:notification_detail' notification.id %}" class="btn btn-sm btn-outline-primary me-2">
+                                                <i class="fa fa-eye"></i>
+                                            </a>
+                                            {% if not notification.is_read %}
+                                                <a href="{% url 'notifications:notification_mark_read' notification.id %}" class="btn btn-sm btn-outline-success me-2">
+                                                    <i class="fa fa-check"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fa fa-bell-slash fa-3x text-muted mb-3"></i>
+                                <p class="mb-0">{% trans "No notifications found" %}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pagination -->
+            {% if notifications.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if notifications.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.read_status %}&read_status={{ request.GET.read_status }}{% endif %}" aria-label="First">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ notifications.previous_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.read_status %}&read_status={{ request.GET.read_status }}{% endif %}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="First">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for i in notifications.paginator.page_range %}
+                            {% if notifications.number == i %}
+                                <li class="page-item active"><a class="page-link" href="#">{{ i }}</a></li>
+                            {% elif i > notifications.number|add:'-3' and i < notifications.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ i }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.read_status %}&read_status={{ request.GET.read_status }}{% endif %}">{{ i }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if notifications.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ notifications.next_page_number }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.read_status %}&read_status={{ request.GET.read_status }}{% endif %}" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ notifications.paginator.num_pages }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.read_status %}&read_status={{ request.GET.read_status }}{% endif %}" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" aria-label="Last">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

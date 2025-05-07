@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Admin Dashboard" %} | Lidhje Biznesi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        transition: transform 0.3s;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    .icon-box {
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    .quick-link-card {
+        transition: all 0.3s;
+    }
+    .quick-link-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">{% trans "Admin Dashboard" %}</h1>
+        <div>
+            <a href="{% url 'admin:index' %}" class="btn btn-outline-primary">
+                <i class="fa fa-cog me-2"></i> {% trans "Django Admin" %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-primary-subtle text-primary me-3">
+                            <i class="fa fa-users"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">{% trans "Total Users" %}</h6>
+                            <h3 class="mb-0">{{ user_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'admin:users_user_changelist' %}" class="text-decoration-none">
+                        {% trans "View Details" %} <i class="fa fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-success-subtle text-success me-3">
+                            <i class="fa fa-building"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">{% trans "Suppliers" %}</h6>
+                            <h3 class="mb-0">{{ supplier_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'admin:suppliers_supplier_changelist' %}" class="text-decoration-none">
+                        {% trans "View Details" %} <i class="fa fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-info-subtle text-info me-3">
+                            <i class="fa fa-store"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">{% trans "Shops" %}</h6>
+                            <h3 class="mb-0">{{ shop_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'admin:shops_shop_changelist' %}" class="text-decoration-none">
+                        {% trans "View Details" %} <i class="fa fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 stat-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-box bg-warning-subtle text-warning me-3">
+                            <i class="fa fa-shopping-cart"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">{% trans "Orders" %}</h6>
+                            <h3 class="mb-0">{{ order_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <a href="{% url 'admin:orders_order_changelist' %}" class="text-decoration-none">
+                        {% trans "View Details" %} <i class="fa fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Quick Links -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Quick Links" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <a href="{% url 'admin:users_user_add' %}" class="card quick-link-card text-decoration-none text-center p-3">
+                                <div class="text-primary mb-2">
+                                    <i class="fa fa-user-plus fa-2x"></i>
+                                </div>
+                                <h6 class="mb-0">{% trans "Add User" %}</h6>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'admin:suppliers_supplier_add' %}" class="card quick-link-card text-decoration-none text-center p-3">
+                                <div class="text-success mb-2">
+                                    <i class="fa fa-building fa-2x"></i>
+                                </div>
+                                <h6 class="mb-0">{% trans "Add Supplier" %}</h6>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'admin:shops_shop_add' %}" class="card quick-link-card text-decoration-none text-center p-3">
+                                <div class="text-info mb-2">
+                                    <i class="fa fa-store fa-2x"></i>
+                                </div>
+                                <h6 class="mb-0">{% trans "Add Shop" %}</h6>
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'admin:products_product_add' %}" class="card quick-link-card text-decoration-none text-center p-3">
+                                <div class="text-warning mb-2">
+                                    <i class="fa fa-box fa-2x"></i>
+                                </div>
+                                <h6 class="mb-0">{% trans "Add Product" %}</h6>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Users -->
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{% trans "Recent Users" %}</h5>
+                    <a href="{% url 'admin:users_user_changelist' %}" class="btn btn-sm btn-outline-primary">
+                        {% trans "View All" %}
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Username" %}</th>
+                                    <th>{% trans "Name" %}</th>
+                                    <th>{% trans "Type" %}</th>
+                                    <th>{% trans "Date Joined" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in recent_users %}
+                                <tr>
+                                    <td>{{ user.username }}</td>
+                                    <td>{{ user.get_full_name }}</td>
+                                    <td>
+                                        <span class="badge {% if user.is_admin %}bg-danger{% elif user.is_supplier %}bg-success{% elif user.is_shop %}bg-info{% elif user.is_driver %}bg-warning{% else %}bg-secondary{% endif %}">
+                                            {{ user.get_user_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ user.date_joined|date:"j M Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'admin:users_user_change' user.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-3">{% trans "No users found" %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Orders -->
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{% trans "Recent Orders" %}</h5>
+                    <a href="{% url 'admin:orders_order_changelist' %}" class="btn btn-sm btn-outline-primary">
+                        {% trans "View All" %}
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Order ID" %}</th>
+                                    <th>{% trans "Shop" %}</th>
+                                    <th>{% trans "Supplier" %}</th>
+                                    <th>{% trans "Amount" %}</th>
+                                    <th>{% trans "Status" %}</th>
+                                    <th>{% trans "Date" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td>#{{ order.id }}</td>
+                                    <td>{{ order.shop.name }}</td>
+                                    <td>{{ order.supplier.name }}</td>
+                                    <td>{{ order.total_amount }} Lekë</td>
+                                    <td>
+                                        <span class="badge bg-{{ order.get_status_display_class }}">
+                                            {{ order.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>{{ order.created_at|date:"j M Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'admin:orders_order_change' order.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-3">{% trans "No orders found" %}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

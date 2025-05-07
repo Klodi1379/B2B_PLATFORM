@@ -1,0 +1,556 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Delivery Plan" %} | Lidhje Biznesi{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+    .route-map {
+        height: 400px;
+        border-radius: 0.375rem;
+        z-index: 1;
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 9px;
+        top: 0;
+        height: 100%;
+        width: 2px;
+        background-color: #dee2e6;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+
+    .timeline-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .timeline-marker {
+        position: absolute;
+        left: -30px;
+        top: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #fff;
+        border: 2px solid #0d6efd;
+        z-index: 1;
+    }
+
+    .timeline-marker.completed {
+        background-color: #198754;
+        border-color: #198754;
+    }
+
+    .timeline-marker.failed {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .timeline-content {
+        padding-bottom: 1rem;
+    }
+
+    .stop-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stop-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    /* Custom marker styles */
+    .custom-marker {
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .custom-marker.pending {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .custom-marker.in-progress {
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .custom-marker.completed {
+        background-color: #198754;
+        color: white;
+    }
+
+    .custom-marker.failed {
+        background-color: #dc3545;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'delivery:driver_dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'delivery:driver_history' %}">{% trans "Delivery History" %}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ plan.name }}</li>
+                </ol>
+            </nav>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3">{{ plan.name }}</h1>
+                    <p class="text-muted">{{ plan.date|date:"j F Y" }}</p>
+                </div>
+                <div>
+                    {% if plan.status == 'PENDING' %}
+                        <span class="badge bg-secondary">{% trans "Pending" %}</span>
+                    {% elif plan.status == 'IN_PROGRESS' %}
+                        <span class="badge bg-primary">{% trans "In Progress" %}</span>
+                    {% elif plan.status == 'COMPLETED' %}
+                        <span class="badge bg-success">{% trans "Completed" %}</span>
+                    {% elif plan.status == 'CANCELLED' %}
+                        <span class="badge bg-danger">{% trans "Cancelled" %}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plan Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center border-end">
+                            <h6 class="text-muted mb-1">{% trans "Total Stops" %}</h6>
+                            <h4 class="mb-0">{{ plan.stops.count }}</h4>
+                        </div>
+                        <div class="col-md-3 text-center border-end">
+                            <h6 class="text-muted mb-1">{% trans "Completed" %}</h6>
+                            <h4 class="mb-0">{{ completed_stops }} / {{ plan.stops.count }}</h4>
+                        </div>
+                        <div class="col-md-3 text-center border-end">
+                            <h6 class="text-muted mb-1">{% trans "Total Distance" %}</h6>
+                            <h4 class="mb-0">{{ plan.total_distance|default:"0" }} km</h4>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <h6 class="text-muted mb-1">{% trans "Total Duration" %}</h6>
+                            <h4 class="mb-0">{{ plan.total_duration|default:"0" }} min</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ completion_percentage }}%;" aria-valuenow="{{ completion_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Map View -->
+        <div class="col-md-7 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{% trans "Route Map" %}</h5>
+                    <div>
+                        {% if not plan.is_completed and user.is_supplier or user.is_driver %}
+                            <a href="{% url 'delivery:plan_optimize' plan.id %}" class="btn btn-sm btn-primary">
+                                <i class="fa fa-route me-1"></i> {% trans "Optimize Route" %}
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="routeMap" class="route-map"></div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <small class="d-block text-muted">{% trans "Total Distance" %}</small>
+                            <strong>{{ plan.total_distance|default:"0" }} km</strong>
+                        </div>
+                        <div class="col-4">
+                            <small class="d-block text-muted">{% trans "Estimated Time" %}</small>
+                            <strong>{{ plan.total_duration|default:"0" }} min</strong>
+                        </div>
+                        <div class="col-4">
+                            <small class="d-block text-muted">{% trans "Stops" %}</small>
+                            <strong>{{ plan.stops.count }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivery Timeline -->
+        <div class="col-md-5 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Delivery Timeline" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% if plan.stops.all %}
+                            {% for stop in plan.stops.all %}
+                                <div class="timeline-item">
+                                    <div class="timeline-marker
+                                        {% if stop.status == 'COMPLETED' %}completed{% endif %}
+                                        {% if stop.status == 'FAILED' %}failed{% endif %}
+                                    "></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex justify-content-between">
+                                            <h6 class="mb-1">{{ stop.shop.name }}</h6>
+                                            <small class="text-muted">
+                                                {% if stop.actual_arrival_time %}
+                                                    {{ stop.actual_arrival_time|time:"H:i" }}
+                                                {% elif stop.estimated_arrival_time %}
+                                                    {{ stop.estimated_arrival_time|time:"H:i" }} ({% trans "est." %})
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                        <p class="mb-1 small text-muted">{{ stop.shop.address }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge
+                                                {% if stop.status == 'PENDING' %}bg-secondary{% endif %}
+                                                {% if stop.status == 'IN_PROGRESS' %}bg-primary{% endif %}
+                                                {% if stop.status == 'COMPLETED' %}bg-success{% endif %}
+                                                {% if stop.status == 'FAILED' %}bg-danger{% endif %}
+                                            ">
+                                                {% if stop.status == 'PENDING' %}{% trans "Pending" %}{% endif %}
+                                                {% if stop.status == 'IN_PROGRESS' %}{% trans "In Progress" %}{% endif %}
+                                                {% if stop.status == 'COMPLETED' %}{% trans "Completed" %}{% endif %}
+                                                {% if stop.status == 'FAILED' %}{% trans "Failed" %}{% endif %}
+                                            </span>
+                                            <a href="{% url 'delivery:stop_detail' stop.id %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fa fa-eye"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <p class="text-muted mb-0">{% trans "No stops in this delivery plan" %}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delivery Stops -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{% trans "Delivery Stops" %}</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" id="exportStops">
+                            <i class="fa fa-download me-1"></i> {% trans "Export" %}
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>{% trans "Shop" %}</th>
+                                    <th>{% trans "Address" %}</th>
+                                    <th>{% trans "Orders" %}</th>
+                                    <th>{% trans "Estimated Time" %}</th>
+                                    <th>{% trans "Actual Time" %}</th>
+                                    <th>{% trans "Duration" %}</th>
+                                    <th>{% trans "Status" %}</th>
+                                    <th>{% trans "Actions" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if plan.stops.all %}
+                                    {% for stop in plan.stops.all %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>{{ stop.shop.name }}</td>
+                                            <td>{{ stop.shop.address }}</td>
+                                            <td>{{ stop.orders.count }}</td>
+                                            <td>{{ stop.estimated_arrival_time|time:"H:i"|default:"-" }}</td>
+                                            <td>{{ stop.actual_arrival_time|time:"H:i"|default:"-" }}</td>
+                                            <td>
+                                                {% if stop.duration %}
+                                                    {{ stop.duration }} min
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if stop.status == 'PENDING' %}
+                                                    <span class="badge bg-secondary">{% trans "Pending" %}</span>
+                                                {% elif stop.status == 'IN_PROGRESS' %}
+                                                    <span class="badge bg-primary">{% trans "In Progress" %}</span>
+                                                {% elif stop.status == 'COMPLETED' %}
+                                                    <span class="badge bg-success">{% trans "Completed" %}</span>
+                                                {% elif stop.status == 'FAILED' %}
+                                                    <span class="badge bg-danger">{% trans "Failed" %}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'delivery:stop_detail' stop.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fa fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="9" class="text-center py-4">
+                                            <p class="text-muted mb-0">{% trans "No stops in this delivery plan" %}</p>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes and Comments -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Notes and Comments" %}</h5>
+                </div>
+                <div class="card-body">
+                    {% if plan.notes %}
+                        <div class="mb-4">
+                            <h6>{% trans "Plan Notes" %}</h6>
+                            <p>{{ plan.notes }}</p>
+                        </div>
+                    {% endif %}
+
+                    <h6>{% trans "Add Comment" %}</h6>
+                    <form method="post" action="{% url 'delivery:add_plan_comment' plan.id %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <textarea class="form-control" name="comment" rows="3" placeholder="{% trans 'Add a comment about this delivery plan...' %}"></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-paper-plane me-2"></i> {% trans "Submit Comment" %}
+                            </button>
+                        </div>
+                    </form>
+
+                    {% if plan.comments.all %}
+                        <hr>
+                        <h6>{% trans "Comments" %}</h6>
+                        <div class="mt-3">
+                            {% for comment in plan.comments.all %}
+                                <div class="d-flex mb-3">
+                                    <div class="flex-shrink-0">
+                                        {% if comment.user.profile_image %}
+                                            <img src="{{ comment.user.profile_image.url }}" alt="{{ comment.user.get_full_name }}" class="rounded-circle" width="40" height="40">
+                                        {% else %}
+                                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center text-secondary" style="width: 40px; height: 40px;">
+                                                {{ comment.user.get_initials }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ms-3">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <h6 class="mb-0">{{ comment.user.get_full_name }}</h6>
+                                            <small class="text-muted ms-2">{{ comment.created_at|date:"j M Y, H:i" }}</small>
+                                        </div>
+                                        <p class="mb-0">{{ comment.text }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize map
+        initMap();
+
+        // Handle export button click
+        const exportButton = document.getElementById('exportStops');
+        if (exportButton) {
+            exportButton.addEventListener('click', function() {
+                window.location.href = "{% url 'delivery:export_plan_stops' plan.id %}";
+            });
+        }
+    });
+
+    function initMap() {
+        // Create map centered on Tirana, Albania
+        const map = L.map('routeMap').setView([41.3275, 19.8187], 12);
+
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Add markers for each stop
+        const stops = [
+            {% for stop in plan.stops.all %}
+            {
+                id: {{ stop.id }},
+                position: [{{ stop.shop.latitude|default:"41.3275" }}, {{ stop.shop.longitude|default:"19.8187" }}],
+                title: "{{ stop.shop.name }}",
+                address: "{{ stop.shop.address }}",
+                status: "{{ stop.status|lower }}",
+                order: {{ forloop.counter }},
+                estimatedTime: "{{ stop.estimated_arrival_time|time:'H:i'|default:'' }}",
+                actualTime: "{{ stop.actual_arrival_time|time:'H:i'|default:'' }}"
+            },
+            {% endfor %}
+        ];
+
+        // Create array to store markers and coordinates for routing
+        const markers = [];
+        const coordinates = [];
+
+        // Add warehouse/starting point if available
+        {% if plan.warehouse_latitude and plan.warehouse_longitude %}
+        const warehousePosition = [{{ plan.warehouse_latitude }}, {{ plan.warehouse_longitude }}];
+        const warehouseMarker = L.marker(warehousePosition, {
+            icon: L.divIcon({
+                className: 'custom-marker',
+                html: '<i class="fa fa-warehouse"></i>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            })
+        }).addTo(map);
+
+        warehouseMarker.bindPopup("<strong>{% trans 'Warehouse' %}</strong><br>{% trans 'Starting Point' %}");
+        coordinates.push(warehousePosition);
+        {% endif %}
+
+        // Add markers for each stop
+        stops.forEach(stop => {
+            // Determine marker class based on status
+            let markerClass = 'custom-marker pending';
+            if (stop.status === 'in_progress') markerClass = 'custom-marker in-progress';
+            if (stop.status === 'completed') markerClass = 'custom-marker completed';
+            if (stop.status === 'failed') markerClass = 'custom-marker failed';
+
+            // Create custom marker
+            const marker = L.marker(stop.position, {
+                icon: L.divIcon({
+                    className: markerClass,
+                    html: stop.order.toString(),
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                })
+            }).addTo(map);
+
+            // Create popup content
+            let popupContent = `
+                <strong>${stop.title}</strong><br>
+                ${stop.address}<br>
+                <span class="badge bg-${getStatusColor(stop.status)}">
+                    ${getStatusText(stop.status)}
+                </span><br>
+            `;
+
+            if (stop.estimatedTime) {
+                popupContent += `<small>{% trans "Est. Arrival" %}: ${stop.estimatedTime}</small><br>`;
+            }
+
+            if (stop.actualTime) {
+                popupContent += `<small>{% trans "Actual Arrival" %}: ${stop.actualTime}</small><br>`;
+            }
+
+            // Add link to stop detail
+            popupContent += `
+                <a href="{% url 'delivery:stop_detail' 0 %}".replace('0', stop.id) class="btn btn-sm btn-primary mt-2">
+                    {% trans "View Details" %}
+                </a>
+            `;
+
+            // Bind popup to marker
+            marker.bindPopup(popupContent);
+
+            // Add marker to array
+            markers.push(marker);
+
+            // Add coordinates for routing
+            coordinates.push(stop.position);
+        });
+
+        // Add warehouse as end point if returning to start
+        {% if plan.warehouse_latitude and plan.warehouse_longitude %}
+        coordinates.push([{{ plan.warehouse_latitude }}, {{ plan.warehouse_longitude }}]);
+        {% endif %}
+
+        // Fit map to bounds if we have stops
+        if (stops.length > 0) {
+            const bounds = L.latLngBounds(coordinates);
+            map.fitBounds(bounds, { padding: [30, 30] });
+        }
+
+        // Draw route if we have more than one coordinate
+        if (coordinates.length > 1) {
+            // Draw lines between points
+            const polyline = L.polyline(coordinates, {
+                color: '#0d6efd',
+                weight: 5,
+                opacity: 0.7,
+                lineJoin: 'round'
+            }).addTo(map);
+        }
+    }
+
+    function getStatusColor(status) {
+        switch(status) {
+            case 'pending': return 'secondary';
+            case 'in_progress': return 'primary';
+            case 'completed': return 'success';
+            case 'failed': return 'danger';
+            default: return 'secondary';
+        }
+    }
+
+    function getStatusText(status) {
+        switch(status) {
+            case 'pending': return '{% trans "Pending" %}';
+            case 'in_progress': return '{% trans "In Progress" %}';
+            case 'completed': return '{% trans "Completed" %}';
+            case 'failed': return '{% trans "Failed" %}';
+            default: return status;
+        }
+    }
+</script>
+{% endblock %}

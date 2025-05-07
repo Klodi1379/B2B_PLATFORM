@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Notification Detail" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'notifications:notification_list' %}">{% trans "Notifications" %}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% trans "Notification Detail" %}</li>
+                </ol>
+            </nav>
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3">{% trans "Notification Detail" %}</h1>
+                <div>
+                    <a href="{% url 'notifications:notification_list' %}" class="btn btn-outline-secondary">
+                        <i class="fa fa-arrow-left me-2"></i> {% trans "Back to List" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Detail Card -->
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header d-flex align-items-center">
+                    <i class="fa {{ notification.get_icon_class }} me-2"></i>
+                    <span class="fw-bold">{{ notification.get_type_display }}</span>
+                    <span class="ms-auto">
+                        {% if notification.is_read %}
+                            <span class="badge bg-success">{% trans "Read" %}</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">{% trans "Unread" %}</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ notification.title }}</h5>
+                    <p class="card-text">{{ notification.message }}</p>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>{% trans "Date" %}:</strong></p>
+                            <p>{{ notification.created_at|date:"j F Y, H:i" }}</p>
+                        </div>
+                        
+                        {% if notification.order %}
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>{% trans "Related Order" %}:</strong></p>
+                            <p>
+                                <a href="{% url 'orders:order_detail' notification.order.id %}">
+                                    {{ notification.order }}
+                                </a>
+                            </p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if notification.delivery_plan %}
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>{% trans "Related Delivery" %}:</strong></p>
+                            <p>
+                                <a href="{% url 'delivery:plan_detail' notification.delivery_plan.id %}">
+                                    {{ notification.delivery_plan }}
+                                </a>
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'notifications:notification_list' %}" class="btn btn-outline-secondary">
+                            <i class="fa fa-arrow-left me-2"></i> {% trans "Back to List" %}
+                        </a>
+                        
+                        {% if not notification.is_read %}
+                        <a href="{% url 'notifications:notification_mark_read' notification.id %}" class="btn btn-success">
+                            <i class="fa fa-check me-2"></i> {% trans "Mark as Read" %}
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% if status == 'PENDING' %}
+    <span class="badge bg-warning text-dark">
+        <i class="fa fa-clock me-1"></i> Në pritje
+    </span>
+{% elif status == 'CONFIRMED' %}
+    <span class="badge bg-primary">
+        <i class="fa fa-check-circle me-1"></i> Konfirmuar
+    </span>
+{% elif status == 'PROCESSING' %}
+    <span class="badge bg-info text-dark">
+        <i class="fa fa-cog me-1"></i> Duke u përpunuar
+    </span>
+{% elif status == 'SHIPPED' %}
+    <span class="badge bg-info">
+        <i class="fa fa-truck me-1"></i> Dërguar
+    </span>
+{% elif status == 'DELIVERED' %}
+    <span class="badge bg-success">
+        <i class="fa fa-check-double me-1"></i> Dorëzuar
+    </span>
+{% elif status == 'CANCELLED' %}
+    <span class="badge bg-danger">
+        <i class="fa fa-times-circle me-1"></i> Anuluar
+    </span>
+{% elif status == 'RETURNED' %}
+    <span class="badge bg-secondary">
+        <i class="fa fa-undo me-1"></i> Kthyer
+    </span>
+{% elif status == 'ACTIVE' %}
+    <span class="badge bg-success">
+        <i class="fa fa-check-circle me-1"></i> Aktiv
+    </span>
+{% elif status == 'INACTIVE' %}
+    <span class="badge bg-secondary">
+        <i class="fa fa-ban me-1"></i> Joaktiv
+    </span>
+{% elif status == 'COMPLETED' %}
+    <span class="badge bg-success">
+        <i class="fa fa-check-double me-1"></i> Përfunduar
+    </span>
+{% elif status == 'IN_PROGRESS' %}
+    <span class="badge bg-primary">
+        <i class="fa fa-spinner me-1"></i> Në Progres
+    </span>
+{% elif status == 'SCHEDULED' %}
+    <span class="badge bg-purple">
+        <i class="fa fa-calendar me-1"></i> Planifikuar
+    </span>
+{% elif status == 'DRAFT' %}
+    <span class="badge bg-secondary">
+        <i class="fa fa-file me-1"></i> Draft
+    </span>
+{% elif status == 'PAID' %}
+    <span class="badge bg-success">
+        <i class="fa fa-money-bill me-1"></i> Paguar
+    </span>
+{% elif status == 'UNPAID' %}
+    <span class="badge bg-danger">
+        <i class="fa fa-exclamation-circle me-1"></i> Papaguar
+    </span>
+{% else %}
+    <span class="badge bg-secondary">
+        {{ status|default:"N/A" }}
+    </span>
+{% endif %}

@@ -1,0 +1,147 @@
+<div class="bg-white overflow-hidden rounded-lg shadow">
+    <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">Produktet në Porosi</h3>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Produkti
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Çmimi
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Sasia
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Totali
+                    </th>
+                    {% if editable %}
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Veprime
+                    </th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for item in order_items %}
+                <tr id="order-item-{{ item.id }}">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                {% if item.product.image %}
+                                    <img class="h-10 w-10 rounded-md object-cover" src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                {% else %}
+                                    <div class="h-10 w-10 rounded-md bg-gray-200 flex items-center justify-center">
+                                        <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ item.product.name }}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    {{ item.product.sku }}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ item.price }} ALL</div>
+                        {% if item.product.unit_of_measure %}
+                        <div class="text-sm text-gray-500">/ {{ item.product.unit_of_measure }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if editable %}
+                        <div class="flex items-center" x-data="{ quantity: {{ item.quantity }} }">
+                            <button 
+                                type="button" 
+                                @click="quantity = Math.max(1, quantity - 1)" 
+                                hx-post="{% url 'orders:update_item_quantity' item.id %}" 
+                                hx-vals='{"quantity": "Math.max(1, quantity - 1)"}'
+                                hx-target="#order-item-{{ item.id }}"
+                                hx-swap="outerHTML"
+                                class="text-gray-500 focus:outline-none focus:text-gray-600 p-1">
+                                <svg class="h-4 w-4" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20 12H4"></path>
+                                </svg>
+                            </button>
+                            
+                            <input 
+                                x-model="quantity" 
+                                @change="$el.value = Math.max(1, parseInt($el.value) || 1)" 
+                                hx-post="{% url 'orders:update_item_quantity' item.id %}" 
+                                hx-trigger="change delay:500ms" 
+                                hx-vals='{"quantity": "quantity"}'
+                                hx-target="#order-item-{{ item.id }}"
+                                hx-swap="outerHTML"
+                                class="mx-1 text-center w-14 bg-gray-100 border rounded px-2 py-1 text-sm"
+                                type="number" 
+                                min="1" 
+                                max="999">
+                            
+                            <button 
+                                type="button" 
+                                @click="quantity++" 
+                                hx-post="{% url 'orders:update_item_quantity' item.id %}" 
+                                hx-vals='{"quantity": "quantity + 1"}'
+                                hx-target="#order-item-{{ item.id }}"
+                                hx-swap="outerHTML"
+                                class="text-gray-500 focus:outline-none focus:text-gray-600 p-1">
+                                <svg class="h-4 w-4" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 4v16m8-8H4"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        {% else %}
+                        <div class="text-sm text-gray-900">{{ item.quantity }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ item.total_price }} ALL
+                    </td>
+                    {% if editable %}
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button 
+                            type="button" 
+                            hx-delete="{% url 'orders:remove_item' item.id %}" 
+                            hx-target="#order-item-{{ item.id }}"
+                            hx-swap="outerHTML"
+                            hx-confirm="Jeni i sigurtë që dëshironi të hiqni këtë produkt?"
+                            class="text-red-600 hover:text-red-900">
+                            Hiq
+                        </button>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{% if editable %}5{% else %}4{% endif %}" class="px-6 py-8 text-center text-gray-500">
+                        <p>Nuk ka produkte në këtë porosi</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot class="bg-gray-50">
+                <tr>
+                    <td colspan="3" class="px-6 py-4 text-right text-sm font-medium text-gray-900">
+                        Totali:
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                        {{ order.total_amount }} ALL
+                    </td>
+                    {% if editable %}
+                    <td></td>
+                    {% endif %}
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>

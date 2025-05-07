@@ -1,0 +1,391 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ shop.shop_name }} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">{% trans "Shop Details" %}</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'suppliers:order_create' %}?shop_id={{ shop.id }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>{% trans "Create Order" %}
+            </a>
+            <a href="{% url 'suppliers:shop_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>{% trans "Back to Shops" %}
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Shop Info -->
+        <div class="col-md-4 mb-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        {% if shop.user.profile.avatar %}
+                            <img src="{{ shop.user.profile.avatar.url }}" alt="{{ shop.shop_name }}" class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 120px; height: 120px; font-size: 36px;">
+                                {{ shop.shop_name|slice:":2"|upper }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <h2 class="h4 mb-1">{{ shop.shop_name }}</h2>
+                    <p class="text-muted mb-3">{{ shop.user.get_full_name }}</p>
+                    
+                    {% if shop.is_active %}
+                        <span class="badge bg-success mb-3">{% trans "Active" %}</span>
+                    {% else %}
+                        <span class="badge bg-secondary mb-3">{% trans "Inactive" %}</span>
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'suppliers:order_list' %}?shop_id={{ shop.id }}" class="btn btn-outline-primary">
+                            <i class="fas fa-clipboard-list me-2"></i>{% trans "View Orders" %}
+                        </a>
+                        <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#toggleStatusModal">
+                            {% if shop.is_active %}
+                                <i class="fas fa-ban me-2"></i>{% trans "Deactivate Shop" %}
+                            {% else %}
+                                <i class="fas fa-check-circle me-2"></i>{% trans "Activate Shop" %}
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contact Info -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Contact Information" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px;">
+                                <i class="fas fa-envelope text-primary"></i>
+                            </div>
+                            <div>
+                                <div class="text-muted small">{% trans "Email" %}</div>
+                                <div>{{ shop.user.email }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if shop.phone %}
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px;">
+                                <i class="fas fa-phone text-primary"></i>
+                            </div>
+                            <div>
+                                <div class="text-muted small">{% trans "Phone" %}</div>
+                                <div>{{ shop.phone }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if shop.address %}
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 36px; height: 36px;">
+                                <i class="fas fa-map-marker-alt text-primary"></i>
+                            </div>
+                            <div>
+                                <div class="text-muted small">{% trans "Address" %}</div>
+                                <div>{{ shop.address }}</div>
+                                {% if shop.city %}
+                                    <div>{{ shop.city }}{% if shop.postal_code %}, {{ shop.postal_code }}{% endif %}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Shop Stats -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Shop Statistics" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{% trans "Total Orders" %}</span>
+                            <span class="badge bg-primary rounded-pill">{{ shop.orders_count }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{% trans "Active Orders" %}</span>
+                            <span class="badge bg-warning rounded-pill">{{ shop.active_orders_count }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{% trans "Completed Orders" %}</span>
+                            <span class="badge bg-success rounded-pill">{{ shop.completed_orders_count }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{% trans "Customer Since" %}</span>
+                            <span class="text-muted">{{ shop.created_at|date:"d M Y" }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{% trans "Last Order" %}</span>
+                            <span class="text-muted">
+                                {% if shop.last_order_date %}
+                                    {{ shop.last_order_date|date:"d M Y" }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Orders and Notes -->
+        <div class="col-md-8">
+            <!-- Recent Orders -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                    <h5 class="mb-0">{% trans "Recent Orders" %}</h5>
+                    <a href="{% url 'suppliers:order_list' %}?shop_id={{ shop.id }}" class="btn btn-sm btn-outline-primary">
+                        {% trans "View All" %}
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Order #" %}</th>
+                                    <th>{% trans "Date" %}</th>
+                                    <th>{% trans "Items" %}</th>
+                                    <th>{% trans "Total" %}</th>
+                                    <th>{% trans "Status" %}</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                    <tr>
+                                        <td>
+                                            <a href="{% url 'suppliers:order_detail' order.id %}" class="text-primary">
+                                                #{{ order.order_number }}
+                                            </a>
+                                        </td>
+                                        <td>{{ order.created_at|date:"d M Y, H:i" }}</td>
+                                        <td>{{ order.items_count }}</td>
+                                        <td>{{ order.total_amount }} ALL</td>
+                                        <td>
+                                            <span class="badge {% if order.status == 'PENDING' %}bg-secondary{% elif order.status == 'CONFIRMED' %}bg-primary{% elif order.status == 'PROCESSING' %}bg-info{% elif order.status == 'READY' %}bg-warning{% elif order.status == 'DELIVERING' %}bg-info{% elif order.status == 'DELIVERED' %}bg-success{% else %}bg-danger{% endif %}">
+                                                {{ order.get_status_display }}
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="{% url 'suppliers:order_detail' order.id %}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <p class="text-muted mb-0">{% trans "No orders yet" %}</p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Top Products -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Most Ordered Products" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Product" %}</th>
+                                    <th>{% trans "Category" %}</th>
+                                    <th>{% trans "Times Ordered" %}</th>
+                                    <th>{% trans "Last Ordered" %}</th>
+                                    <th>{% trans "Price" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in top_products %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if product.image %}
+                                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="me-2 rounded" style="width: 40px; height: 40px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="bg-light rounded d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                                        <i class="fas fa-box text-secondary"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <a href="{% url 'suppliers:product_detail' product.id %}" class="text-decoration-none">
+                                                    {{ product.name }}
+                                                </a>
+                                            </div>
+                                        </td>
+                                        <td>{{ product.category.name }}</td>
+                                        <td>{{ product.order_count }}</td>
+                                        <td>{{ product.last_ordered|date:"d M Y" }}</td>
+                                        <td>{{ product.get_active_price }} ALL</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <p class="text-muted mb-0">{% trans "No products ordered yet" %}</p>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notes Section -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Shop Notes" %}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'suppliers:shop_add_note' shop.id %}" class="mb-4">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="note_content" class="form-label">{% trans "Add Note" %}</label>
+                            <textarea class="form-control" id="note_content" name="note_content" rows="3" required></textarea>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>{% trans "Save Note" %}
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    
+                    <div class="notes-list">
+                        {% for note in shop_notes %}
+                            <div class="note-item mb-3 pb-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center">
+                                        {% if note.created_by.profile.avatar %}
+                                            <img src="{{ note.created_by.profile.avatar.url }}" alt="{{ note.created_by.get_full_name }}" class="me-2 rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-size: 12px;">
+                                                {{ note.created_by.get_initials }}
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <div class="fw-medium">{{ note.created_by.get_full_name }}</div>
+                                            <div class="small text-muted">{{ note.created_at|date:"d M Y, H:i" }}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if note.created_by == request.user %}
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteNoteModal{{ note.id }}">
+                                                        <i class="fas fa-trash me-2"></i>{% trans "Delete" %}
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        
+                                        <!-- Delete Note Modal -->
+                                        <div class="modal fade" id="deleteNoteModal{{ note.id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">{% trans "Confirm Deletion" %}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>{% trans "Are you sure you want to delete this note?" %}</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                                                        <form method="post" action="{% url 'suppliers:shop_delete_note' note.id %}">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger">{% trans "Delete" %}</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <p class="mb-0">{{ note.content|linebreaks }}</p>
+                            </div>
+                        {% empty %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-sticky-note fa-2x text-muted mb-3"></i>
+                                <p class="mb-0">{% trans "No notes for this shop yet" %}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toggle Status Modal -->
+    <div class="modal fade" id="toggleStatusModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        {% if shop.is_active %}
+                            {% trans "Confirm Deactivation" %}
+                        {% else %}
+                            {% trans "Confirm Activation" %}
+                        {% endif %}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if shop.is_active %}
+                        <p>{% trans "Are you sure you want to deactivate this shop?" %}</p>
+                        <p class="fw-medium">{{ shop.shop_name }}</p>
+                        <p class="text-danger">{% trans "The shop will no longer be able to place orders from you." %}</p>
+                    {% else %}
+                        <p>{% trans "Are you sure you want to activate this shop?" %}</p>
+                        <p class="fw-medium">{{ shop.shop_name }}</p>
+                        <p class="text-success">{% trans "The shop will be able to place orders from you." %}</p>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                    <form method="post" action="{% url 'suppliers:shop_toggle_status' shop.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn {% if shop.is_active %}btn-danger{% else %}btn-success{% endif %}">
+                            {% if shop.is_active %}
+                                {% trans "Deactivate" %}
+                            {% else %}
+                                {% trans "Activate" %}
+                            {% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

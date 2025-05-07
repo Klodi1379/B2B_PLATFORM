@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Delivery Route" %} | Lidhje Biznesi{% endblock %}
+
+{% block extra_css %}
+<style>
+    #map {
+        height: 500px;
+        width: 100%;
+        border-radius: 0.375rem;
+    }
+    .delivery-stop {
+        position: relative;
+        padding-left: 30px;
+    }
+    .delivery-stop:before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 0;
+        height: 100%;
+        width: 2px;
+        background-color: #dee2e6;
+    }
+    .delivery-stop:first-child:before {
+        top: 15px;
+    }
+    .delivery-stop:last-child:before {
+        height: 15px;
+    }
+    .stop-marker {
+        position: absolute;
+        left: 0;
+        top: 15px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #fff;
+        border: 2px solid #0d6efd;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: bold;
+    }
+    .stop-marker.completed {
+        background-color: #198754;
+        border-color: #198754;
+        color: #fff;
+    }
+    .stop-marker.depot {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">{% trans "Delivery Route" %}</h1>
+            <p class="text-muted">{{ delivery.delivery_date|date:"l, j F Y" }} - 
+                {% if delivery.time_slot == 'MORNING' %}
+                    {% trans "Morning (8:00 - 12:00)" %}
+                {% elif delivery.time_slot == 'AFTERNOON' %}
+                    {% trans "Afternoon (12:00 - 16:00)" %}
+                {% elif delivery.time_slot == 'EVENING' %}
+                    {% trans "Evening (16:00 - 20:00)" %}
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'delivery:detail' delivery.id %}" class="btn btn-outline-secondary">
+                <i class="fas fa-info-circle me-2"></i>{% trans "Delivery Details" %}
+            </a>
+            <a href="{% url 'delivery:list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>{% trans "Back to Deliveries" %}
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Map -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Delivery Route Map" %}</h5>
+                </div>
+                <div class="card-body p-3">
+                    <div id="map"></div>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="badge bg-primary me-2">{{ delivery.orders.count }} {% trans "stops" %}</span>
+                            <span class="text-muted">{{ total_distance }} km</span>
+                        </div>
+                        <a href="#" class="btn btn-sm btn-outline-primary" onclick="navigator.share({title: '{% trans 'Delivery Route' %}', text: '{% trans 'My delivery route for' %} {{ delivery.delivery_date|date:'j F Y' }}', url: window.location.href}); return false;">
+                            <i class="fas fa-share-alt me-1"></i> {% trans "Share Route" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stops List -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Delivery Stops" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <!-- Depot/Warehouse -->
+                        <div class="list-group-item delivery-stop">
+                            <div class="stop-marker depot">
+                                <i class="fas fa-home fa-xs"></i>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div class="fw-medium">{% trans "Warehouse" %} ({% trans "Start" %})</div>
+                                <div class="text-muted small">0 km</div>
+                            </div>
+                            <div class="text-muted small mb-2">{{ warehouse.address }}</div>
+                            <div>
+                                {% if delivery.status == 'PENDING' %}
+                                    <span class="badge bg-secondary">{% trans "Not Started" %}</span>
+                                {% elif delivery.status == 'IN_PROGRESS' or delivery.status == 'COMPLETED' %}
+                                    <span class="badge bg-success">{% trans "Departed" %}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Order Stops -->
+                        {% for stop in stops %}
+                            <div class="list-group-item delivery-stop">
+                                <div class="stop-marker {% if stop.delivered %}completed{% endif %}">
+                                    {{ forloop.counter }}
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="fw-medium">{{ stop.shop.shop_name }}</div>
+                                    <div class="text-muted small">{{ stop.distance|floatformat:1 }} km</div>
+                                </div>
+                                <div class="text-muted small mb-1">{{ stop.shop.address }}</div>
+                                <div class="mb-2">
+                                    <span class="badge {% if stop.delivered %}bg-success{% else %}bg-secondary{% endif %}">
+                                        {% if stop.delivered %}
+                                            {% trans "Delivered" %}
+                                        {% else %}
+                                            {% trans "Pending" %}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="d-grid">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'suppliers:order_detail' stop.order.id %}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-clipboard-list me-1"></i> {% trans "Order Details" %}
+                                        </a>
+                                        {% if delivery.status == 'IN_PROGRESS' and not stop.delivered %}
+                                            <form method="post" action="{% url 'delivery:mark_order_delivered' delivery.id stop.order.id %}" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-success">
+                                                    <i class="fas fa-check me-1"></i> {% trans "Mark Delivered" %}
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <!-- Return to Depot -->
+                        <div class="list-group-item delivery-stop">
+                            <div class="stop-marker depot">
+                                <i class="fas fa-home fa-xs"></i>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div class="fw-medium">{% trans "Warehouse" %} ({% trans "Return" %})</div>
+                                <div class="text-muted small">{{ return_distance|floatformat:1 }} km</div>
+                            </div>
+                            <div class="text-muted small mb-2">{{ warehouse.address }}</div>
+                            <div>
+                                {% if delivery.status == 'COMPLETED' %}
+                                    <span class="badge bg-success">{% trans "Returned" %}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{% trans "Not Returned" %}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-grid">
+                        {% if delivery.status == 'PENDING' %}
+                            <form method="post" action="{% url 'delivery:start' delivery.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-play me-2"></i>{% trans "Start Delivery" %}
+                                </button>
+                            </form>
+                        {% elif delivery.status == 'IN_PROGRESS' %}
+                            <form method="post" action="{% url 'delivery:complete' delivery.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-check me-2"></i>{% trans "Complete Delivery" %}
+                                </button>
+                            </form>
+                        {% elif delivery.status == 'COMPLETED' %}
+                            <button class="btn btn-outline-success w-100" disabled>
+                                <i class="fas fa-check-circle me-2"></i>{% trans "Delivery Completed" %}
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Driver Information -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">{% trans "Driver & Vehicle Information" %}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if delivery.driver.profile.avatar %}
+                            <img src="{{ delivery.driver.profile.avatar.url }}" alt="{{ delivery.driver.get_full_name }}" class="rounded-circle me-3" style="width: 48px; height: 48px; object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                {{ delivery.driver.get_initials }}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-0">{{ delivery.driver.get_full_name }}</h6>
+                            <p class="text-muted mb-0 small">{% trans "Driver" %}</p>
+                        </div>
+                    </div>
+                    {% if delivery.driver.phone %}
+                    <div class="mb-2">
+                        <span class="text-muted me-2"><i class="fas fa-phone"></i></span>
+                        <span>{{ delivery.driver.phone }}</span>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <span class="text-muted me-2"><i class="fas fa-envelope"></i></span>
+                        <span>{{ delivery.driver.email }}</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                            <i class="fas fa-truck text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">{{ delivery.vehicle.name }}</h6>
+                            <p class="text-muted mb-0 small">{{ delivery.vehicle.license_plate }}</p>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <span class="text-muted me-2"><i class="fas fa-info-circle"></i></span>
+                        <span>{% trans "Type" %}: {{ delivery.vehicle.type }}</span>
+                    </div>
+                    {% if delivery.vehicle.capacity %}
+                    <div>
+                        <span class="text-muted me-2"><i class="fas fa-box"></i></span>
+                        <span>{% trans "Capacity" %}: {{ delivery.vehicle.capacity }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delivery Summary -->
+    {% if delivery.notes %}
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">{% trans "Delivery Notes" %}</h5>
+        </div>
+        <div class="card-body">
+            <p class="mb-0">{{ delivery.notes|linebreaks }}</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap" async defer></script>
+<script>
+    let map;
+    let directionsService;
+    let directionsRenderer;
+    
+    function initMap() {
+        // Create map
+        map = new google.maps.Map(document.getElementById("map"), {
+            center: { lat: {{ warehouse.latitude }}, lng: {{ warehouse.longitude }} },
+            zoom: 12,
+            mapTypeControl: false,
+        });
+        
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer({
+            map: map,
+            suppressMarkers: true,
+        });
+        
+        // Add markers and calculate route
+        addMarkersAndRoute();
+    }
+    
+    function addMarkersAndRoute() {
+        // Depot marker
+        const warehousePosition = { 
+            lat: {{ warehouse.latitude }}, 
+            lng: {{ warehouse.longitude }} 
+        };
+        
+        const warehouseMarker = new google.maps.Marker({
+            position: warehousePosition,
+            map: map,
+            icon: {
+                url: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+            },
+            title: "{% trans 'Warehouse' %}"
+        });
+        
+        // Order markers
+        const stopMarkers = [];
+        const waypoints = [];
+        
+        {% for stop in stops %}
+            const stopPosition{{ forloop.counter }} = { 
+                lat: {{ stop.shop.latitude }}, 
+                lng: {{ stop.shop.longitude }} 
+            };
+            
+            const marker{{ forloop.counter }} = new google.maps.Marker({
+                position: stopPosition{{ forloop.counter }},
+                map: map,
+                icon: {
+                    url: {% if stop.delivered %}"https://maps.google.com/mapfiles/ms/icons/green-dot.png"{% else %}"https://maps.google.com/mapfiles/ms/icons/blue-dot.png"{% endif %},
+                    labelOrigin: new google.maps.Point(11, 12)
+                },
+                label: {
+                    text: "{{ forloop.counter }}",
+                    color: "white",
+                    fontWeight: "bold"
+                },
+                title: "{{ stop.shop.shop_name }}"
+            });
+            
+            stopMarkers.push(marker{{ forloop.counter }});
+            
+            // Add info window
+            const infoWindow{{ forloop.counter }} = new google.maps.InfoWindow({
+                content: `
+                    <div style="min-width: 200px;">
+                        <h6 style="margin-bottom: 5px;">{{ stop.shop.shop_name }}</h6>
+                        <p style="margin-bottom: 5px; font-size: 12px;">{{ stop.shop.address }}</p>
+                        <div style="margin-bottom: 5px;">
+                            <span style="background-color: {% if stop.delivered %}#198754{% else %}#6c757d{% endif %}; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px;">
+                                {% if stop.delivered %}{% trans "Delivered" %}{% else %}{% trans "Pending" %}{% endif %}
+                            </span>
+                        </div>
+                        <a href="{% url 'suppliers:order_detail' stop.order.id %}" style="font-size: 12px;">{% trans "View Order" %}</a>
+                    </div>
+                `
+            });
+            
+            marker{{ forloop.counter }}.addListener("click", () => {
+                infoWindow{{ forloop.counter }}.open(map, marker{{ forloop.counter }});
+            });
+            
+            // Add to waypoints
+            waypoints.push({
+                location: stopPosition{{ forloop.counter }},
+                stopover: true
+            });
+        {% endfor %}
+        
+        // Add warehouse info window
+        const warehouseInfoWindow = new google.maps.InfoWindow({
+            content: `
+                <div style="min-width: 150px;">
+                    <h6 style="margin-bottom: 5px;">{% trans "Warehouse" %}</h6>
+                    <p style="margin-bottom: 0; font-size: 12px;">{{ warehouse.address }}</p>
+                </div>
+            `
+        });
+        
+        warehouseMarker.addListener("click", () => {
+            warehouseInfoWindow.open(map, warehouseMarker);
+        });
+        
+        // Calculate and display route
+        if (waypoints.length > 0) {
+            directionsService.route(
+                {
+                    origin: warehousePosition,
+                    destination: warehousePosition,
+                    waypoints: waypoints,
+                    optimizeWaypoints: {% if delivery.optimize_route %}true{% else %}false{% endif %},
+                    travelMode: google.maps.TravelMode.DRIVING,
+                },
+                (response, status) => {
+                    if (status === "OK") {
+                        directionsRenderer.setDirections(response);
+                    } else {
+                        console.error("Directions request failed due to " + status);
+                    }
+                }
+            );
+        }
+    }
+</script>
+{% endblock %}
+{% endblock %}

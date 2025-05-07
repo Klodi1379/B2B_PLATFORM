@@ -1,0 +1,26 @@
+<a href="{% url 'shops:dashboard' %}" class="dropdown-item">
+    <i class="fa fa-tachometer-alt me-2"></i> Dashboard
+</a>
+<a href="{% url 'shops:supplier_list' %}" class="dropdown-item">
+    <i class="fa fa-building me-2"></i> Furnitorët
+</a>
+<a href="{% url 'products:product_list' %}" class="dropdown-item">
+    <i class="fa fa-box me-2"></i> Të Gjitha Produktet
+</a>
+<a href="{% url 'shops:order_list' %}" class="dropdown-item">
+    <i class="fa fa-shopping-cart me-2"></i> Porositë
+</a>
+<a href="{% url 'shops:cart_view' %}" class="dropdown-item">
+    <i class="fa fa-shopping-basket me-2"></i> Karroca
+    {% if cart_count > 0 %}
+    <span class="badge rounded-pill bg-primary ms-1">
+        {{ cart_count }}
+    </span>
+    {% endif %}
+</a>
+<a href="{% url 'users:profile' %}" class="dropdown-item">
+    <i class="fa fa-user me-2"></i> Profili
+</a>
+<a href="{% url 'users:logout' %}" class="dropdown-item">
+    <i class="fa fa-sign-out-alt me-2"></i> Dilni
+</a>

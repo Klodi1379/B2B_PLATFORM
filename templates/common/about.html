@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "About Us" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="row align-items-center my-5">
+        <div class="col-lg-6 mb-4 mb-lg-0">
+            <h1 class="display-5 fw-bold mb-4">{% trans "Connecting Local Businesses" %}</h1>
+            <p class="lead mb-4">{% trans "Lidhje Biznesi is the premier B2B platform connecting local shops with suppliers, making ordering and distribution more efficient, transparent, and simple." %}</p>
+            <p class="mb-4">{% trans "Our mission is to transform how local businesses operate by providing intuitive tools that save time, reduce errors, and create a more connected business ecosystem." %}</p>
+            {% if not user.is_authenticated %}
+                <div class="d-flex flex-column flex-sm-row gap-3">
+                    <a href="{% url 'registration:shop_registration' %}" class="btn btn-primary">
+                        <i class="fas fa-store me-2"></i>{% trans "Join as Shop" %}
+                    </a>
+                    <a href="{% url 'registration:supplier_registration' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-truck me-2"></i>{% trans "Join as Supplier" %}
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+        <div class="col-lg-6">
+            <img src="{% static 'img/about-hero.jpg' %}" alt="{% trans 'Local Businesses Connected' %}" class="img-fluid rounded shadow">
+        </div>
+    </div>
+
+    <!-- Company Overview -->
+    <div class="my-5">
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-8 text-center">
+                <h2 class="mb-4">{% trans "Our Story" %}</h2>
+                <p class="mb-0">{% trans "Lidhje Biznesi was founded in 2023 with a simple mission: to transform how local businesses connect and trade with each other. We observed firsthand the inefficiencies in the traditional B2B ordering and delivery processes, which were largely manual, error-prone, and lacking transparency." %}</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="icon-box mb-4">
+                            <i class="fas fa-lightbulb fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="h5 mb-3">{% trans "The Idea" %}</h3>
+                        <p class="card-text">{% trans "We envisioned a platform that would digitize and streamline the B2B transaction process, making it easier for small retailers to order from their suppliers and for suppliers to manage their distribution operations." %}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="icon-box mb-4">
+                            <i class="fas fa-rocket fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="h5 mb-3">{% trans "The Launch" %}</h3>
+                        <p class="card-text">{% trans "After months of research, development, and testing with local businesses, we launched Lidhje Biznesi with a focus on Albania and select European cities, starting with Brussels." %}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <div class="icon-box mb-4">
+                            <i class="fas fa-chart-line fa-3x text-primary"></i>
+                        </div>
+                        <h3 class="h5 mb-3">{% trans "The Growth" %}</h3>
+                        <p class="card-text">{% trans "Today, we're proud to be serving hundreds of businesses, facilitating thousands of orders monthly, and continually improving our platform based on user feedback and market needs." %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Value Proposition -->
+    <div class="bg-light py-5 my-5 rounded">
+        <div class="container">
+            <div class="row justify-content-center mb-5">
+                <div class="col-md-8 text-center">
+                    <h2 class="mb-4">{% trans "Why Choose Lidhje Biznesi?" %}</h2>
+                    <p class="lead mb-0">{% trans "We're revolutionizing local business-to-business commerce with our user-centric platform." %}</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="h5 mb-2">{% trans "Time Saving" %}</h3>
+                            <p class="mb-0">{% trans "Digitized ordering process reduces time spent on manual orders by up to 70%." %}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                                <i class="fas fa-check-double"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="h5 mb-2">{% trans "Error Reduction" %}</h3>
+                            <p class="mb-0">{% trans "Digital ordering means fewer mistakes, wrong deliveries, and inventory discrepancies." %}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="h5 mb-2">{% trans "Transparency" %}</h3>
+                            <p class="mb-0">{% trans "Real-time visibility into inventory, pricing, order status, and delivery scheduling." %}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="h5 mb-2">{% trans "Optimized Delivery" %}</h3>
+                            <p class="mb-0">{% trans "Route optimization saves suppliers time and fuel costs while improving delivery reliability." %}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="h5 mb-2">{% trans "Mobile Friendly" %}</h3>
+                            <p class="mb-0">{% trans "Order and manage your business from anywhere with our mobile-first platform." %}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                                <i class="fas fa-expand"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="h5 mb-2">{% trans "Market Expansion" %}</h3>
+                            <p class="mb-0">{% trans "Suppliers reach more shops, and shops discover more suppliers through our platform." %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Section -->
+    <div class="my-5">
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-8 text-center">
+                <h2 class="mb-4">{% trans "Meet Our Team" %}</h2>
+                <p class="mb-0">{% trans "We're a diverse group of professionals passionate about technology and local business." %}</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <img src="{% static 'img/team/team-1.jpg' %}" alt="CEO" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                        <h3 class="h5 mb-1">{% trans "Arben Maloku" %}</h3>
+                        <p class="text-muted mb-3">{% trans "Founder & CEO" %}</p>
+                        <p class="card-text">{% trans "With over 15 years of experience in retail and distribution, Arben brings deep industry knowledge and vision to Lidhje Biznesi." %}</p>
+                        <div class="social-links">
+                            <a href="#" class="text-secondary me-2"><i class="fab fa-linkedin fa-lg"></i></a>
+                            <a href="#" class="text-secondary me-2"><i class="fab fa-twitter fa-lg"></i></a>
+                            <a href="#" class="text-secondary"><i class="fas fa-envelope fa-lg"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <img src="{% static 'img/team/team-2.jpg' %}" alt="CTO" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                        <h3 class="h5 mb-1">{% trans "Elira Krasniqi" %}</h3>
+                        <p class="text-muted mb-3">{% trans "CTO" %}</p>
+                        <p class="card-text">{% trans "A tech innovator with experience at leading European startups, Elira leads our development team and technology strategy." %}</p>
+                        <div class="social-links">
+                            <a href="#" class="text-secondary me-2"><i class="fab fa-linkedin fa-lg"></i></a>
+                            <a href="#" class="text-secondary me-2"><i class="fab fa-github fa-lg"></i></a>
+                            <a href="#" class="text-secondary"><i class="fas fa-envelope fa-lg"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <img src="{% static 'img/team/team-3.jpg' %}" alt="COO" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                        <h3 class="h5 mb-1">{% trans "Luca Rossi" %}</h3>
+                        <p class="text-muted mb-3">{% trans "COO" %}</p>
+                        <p class="card-text">{% trans "With extensive experience in operations and logistics, Luca ensures our platform delivers real-world value to businesses." %}</p>
+                        <div class="social-links">
+                            <a href="#" class="text-secondary me-2"><i class="fab fa-linkedin fa-lg"></i></a>
+                            <a href="#" class="text-secondary me-2"><i class="fab fa-twitter fa-lg"></i></a>
+                            <a href="#" class="text-secondary"><i class="fas fa-envelope fa-lg"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Testimonials -->
+    <div class="bg-light py-5 my-5 rounded">
+        <div class="container">
+            <div class="row justify-content-center mb-5">
+                <div class="col-md-8 text-center">
+                    <h2 class="mb-4">{% trans "What Our Users Say" %}</h2>
+                    <p class="lead mb-0">{% trans "Don't just take our word for it - hear from businesses using Lidhje Biznesi every day." %}</p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                            </div>
+                            <p class="card-text mb-4">{% trans ""Lidhje Biznesi has completely transformed how I order from my suppliers. What used to take hours of phone calls and paperwork now takes minutes. I can focus more on my customers and less on administrative tasks."" %}</p>
+                            <div class="d-flex align-items-center">
+                                <img src="{% static 'img/testimonials/testimonial-1.jpg' %}" alt="Shop Owner" class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                <div>
+                                    <h3 class="h6 mb-1">{% trans "Ana Berisha" %}</h3>
+                                    <p class="small text-muted mb-0">{% trans "Minimarket Owner, Tirana" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                            </div>
+                            <p class="card-text mb-4">{% trans ""As a distributor, the route optimization feature alone has saved us 20% on fuel costs. Our drivers are happier with more efficient routes, and our customers appreciate the more reliable delivery times."" %}</p>
+                            <div class="d-flex align-items-center">
+                                <img src="{% static 'img/testimonials/testimonial-2.jpg' %}" alt="Supplier" class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                <div>
+                                    <h3 class="h6 mb-1">{% trans "Mehmet Hoxha" %}</h3>
+                                    <p class="small text-muted mb-0">{% trans "Beverage Distributor, Durrës" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star-half-alt text-warning"></i>
+                            </div>
+                            <p class="card-text mb-4">{% trans ""I've discovered new suppliers through Lidhje Biznesi that I wouldn't have found otherwise. Being able to compare products and prices from multiple suppliers in one place has helped me find better deals."" %}</p>
+                            <div class="d-flex align-items-center">
+                                <img src="{% static 'img/testimonials/testimonial-3.jpg' %}" alt="Shop Owner" class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                <div>
+                                    <h3 class="h6 mb-1">{% trans "Sophie Dubois" %}</h3>
+                                    <p class="small text-muted mb-0">{% trans "Cafe Owner, Brussels" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                                <i class="fas fa-star text-warning"></i>
+                            </div>
+                            <p class="card-text mb-4">{% trans ""The transparency of the platform is what I value most. I can see what's in stock, current prices, and exactly when my order will arrive. It's eliminated those frustrating 'out of stock' surprises."" %}</p>
+                            <div class="d-flex align-items-center">
+                                <img src="{% static 'img/testimonials/testimonial-4.jpg' %}" alt="Shop Owner" class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                                <div>
+                                    <h3 class="h6 mb-1">{% trans "Driton Gashi" %}</h3>
+                                    <p class="small text-muted mb-0">{% trans "Grocery Store Owner, Pristina" %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="my-5 text-center">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h2 class="mb-4">{% trans "Ready to Transform Your Business?" %}</h2>
+                <p class="lead mb-4">{% trans "Join hundreds of businesses already using Lidhje Biznesi to streamline their B2B operations." %}</p>
+                
+                {% if not user.is_authenticated %}
+                    <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">
+                        <a href="{% url 'registration:shop_registration' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-store me-2"></i>{% trans "Register as Shop" %}
+                        </a>
+                        <a href="{% url 'registration:supplier_registration' %}" class="btn btn-success btn-lg">
+                            <i class="fas fa-truck me-2"></i>{% trans "Register as Supplier" %}
+                        </a>
+                    </div>
+                {% else %}
+                    <a href="{% url 'common:contact' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-envelope me-2"></i>{% trans "Contact Our Team" %}
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

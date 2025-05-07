@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Create Delivery" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">{% trans "Schedule New Delivery" %}</h1>
+        <a href="{% url 'delivery:list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>{% trans "Back to Deliveries" %}
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" id="delivery-form">
+                {% csrf_token %}
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">{% trans "Delivery Details" %}</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="delivery_date" class="form-label">{% trans "Delivery Date" %}<span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="delivery_date" name="delivery_date" min="{{ today_date|date:'Y-m-d' }}" value="{{ form.delivery_date.value|date:'Y-m-d'|default:tomorrow_date|date:'Y-m-d' }}" required>
+                                    {% if form.delivery_date.errors %}
+                                        <div class="text-danger mt-1">{{ form.delivery_date.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="time_slot" class="form-label">{% trans "Time Slot" %}<span class="text-danger">*</span></label>
+                                    <select class="form-select" id="time_slot" name="time_slot" required>
+                                        <option value="">{% trans "Select Time Slot" %}</option>
+                                        <option value="MORNING" {% if form.time_slot.value == 'MORNING' %}selected{% endif %}>{% trans "Morning (8:00 - 12:00)" %}</option>
+                                        <option value="AFTERNOON" {% if form.time_slot.value == 'AFTERNOON' %}selected{% endif %}>{% trans "Afternoon (12:00 - 16:00)" %}</option>
+                                        <option value="EVENING" {% if form.time_slot.value == 'EVENING' %}selected{% endif %}>{% trans "Evening (16:00 - 20:00)" %}</option>
+                                    </select>
+                                    {% if form.time_slot.errors %}
+                                        <div class="text-danger mt-1">{{ form.time_slot.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="driver" class="form-label">{% trans "Driver" %}<span class="text-danger">*</span></label>
+                                    <select class="form-select" id="driver" name="driver" required>
+                                        <option value="">{% trans "Select Driver" %}</option>
+                                        {% for driver in drivers %}
+                                            <option value="{{ driver.id }}" {% if form.driver.value == driver.id %}selected{% endif %}>
+                                                {{ driver.get_full_name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if form.driver.errors %}
+                                        <div class="text-danger mt-1">{{ form.driver.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="vehicle" class="form-label">{% trans "Vehicle" %}<span class="text-danger">*</span></label>
+                                    <select class="form-select" id="vehicle" name="vehicle" required>
+                                        <option value="">{% trans "Select Vehicle" %}</option>
+                                        {% for vehicle in vehicles %}
+                                            <option value="{{ vehicle.id }}" {% if form.vehicle.value == vehicle.id %}selected{% endif %}>
+                                                {{ vehicle.name }} ({{ vehicle.license_plate }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    {% if form.vehicle.errors %}
+                                        <div class="text-danger mt-1">{{ form.vehicle.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="notes" class="form-label">{% trans "Delivery Notes" %}</label>
+                                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ form.notes.value|default:'' }}</textarea>
+                                    {% if form.notes.errors %}
+                                        <div class="text-danger mt-1">{{ form.notes.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">{% trans "Orders to Deliver" %}</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                        <input type="text" id="orderSearch" class="form-control" placeholder="{% trans 'Search orders...' %}">
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="toggleAllOrders">
+                                        <label class="form-check-label" for="toggleAllOrders">{% trans "Select All" %}</label>
+                                    </div>
+                                </div>
+
+                                <div class="order-list" style="max-height: 400px; overflow-y: auto;">
+                                    {% for order in ready_orders %}
+                                        <div class="order-item mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input order-checkbox" type="checkbox" 
+                                                       name="orders" value="{{ order.id }}" id="order{{ order.id }}"
+                                                       {% if order.id in form.orders.value %}checked{% endif %}>
+                                                <label class="form-check-label d-flex justify-content-between w-100" for="order{{ order.id }}">
+                                                    <div>
+                                                        <span class="fw-medium">#{{ order.order_number }}</span>
+                                                        <span class="ms-2 text-muted">{{ order.shop.shop_name }}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span class="badge bg-success">{% trans "Ready" %}</span>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                            <div class="ps-4 text-muted small">
+                                                <div>{{ order.shop.address }}</div>
+                                                <div>{{ order.shop.city }}{% if order.shop.postal_code %}, {{ order.shop.postal_code }}{% endif %}</div>
+                                            </div>
+                                        </div>
+                                    {% empty %}
+                                        <div class="text-center py-4">
+                                            <i class="fas fa-boxes fa-2x text-muted mb-3"></i>
+                                            <p class="mb-0">{% trans "No orders ready for delivery" %}</p>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                {% if form.orders.errors %}
+                                    <div class="text-danger mt-2">{{ form.orders.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'delivery:list' %}" class="btn btn-outline-secondary">
+                        {% trans "Cancel" %}
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>{% trans "Schedule Delivery" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Order search functionality
+    document.getElementById('orderSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const orderItems = document.querySelectorAll('.order-item');
+        
+        orderItems.forEach(item => {
+            const orderText = item.textContent.toLowerCase();
+            if (orderText.includes(searchTerm)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+    
+    // Toggle all orders checkbox
+    document.getElementById('toggleAllOrders').addEventListener('change', function() {
+        const orderCheckboxes = document.querySelectorAll('.order-checkbox');
+        const visibleCheckboxes = Array.from(orderCheckboxes).filter(checkbox => {
+            return checkbox.closest('.order-item').style.display !== 'none';
+        });
+        
+        visibleCheckboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+        });
+    });
+    
+    // Update "Select All" state when individual checkboxes change
+    document.querySelectorAll('.order-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectAllState);
+    });
+    
+    function updateSelectAllState() {
+        const orderCheckboxes = document.querySelectorAll('.order-checkbox');
+        const visibleCheckboxes = Array.from(orderCheckboxes).filter(checkbox => {
+            return checkbox.closest('.order-item').style.display !== 'none';
+        });
+        const allChecked = visibleCheckboxes.every(checkbox => checkbox.checked);
+        const toggleAllCheckbox = document.getElementById('toggleAllOrders');
+        
+        toggleAllCheckbox.checked = allChecked;
+        toggleAllCheckbox.indeterminate = !allChecked && visibleCheckboxes.some(checkbox => checkbox.checked);
+    }
+    
+    // Initialize select all state
+    updateSelectAllState();
+</script>
+{% endblock %}
+{% endblock %}

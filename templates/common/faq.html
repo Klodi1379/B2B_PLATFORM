@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Frequently Asked Questions" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8 text-center">
+            <h1 class="display-5 fw-bold mb-4">{% trans "Frequently Asked Questions" %}</h1>
+            <p class="lead mb-0">{% trans "Find answers to common questions about using the Lidhje Biznesi platform" %}</p>
+        </div>
+    </div>
+
+    <!-- Search Box -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="get" action="{% url 'common:faq' %}">
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-lg" name="q" placeholder="{% trans 'Search FAQs...' %}" value="{{ search_query }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Categories -->
+    <div class="row">
+        <div class="col-lg-3 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">{% trans "Categories" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="{% url 'common:faq' %}" class="list-group-item list-group-item-action {% if not category %}active{% endif %}">
+                            {% trans "All FAQs" %}
+                        </a>
+                        <a href="{% url 'common:faq' %}?category=general" class="list-group-item list-group-item-action {% if category == 'general' %}active{% endif %}">
+                            {% trans "General Questions" %}
+                        </a>
+                        <a href="{% url 'common:faq' %}?category=shops" class="list-group-item list-group-item-action {% if category == 'shops' %}active{% endif %}">
+                            {% trans "For Shops" %}
+                        </a>
+                        <a href="{% url 'common:faq' %}?category=suppliers" class="list-group-item list-group-item-action {% if category == 'suppliers' %}active{% endif %}">
+                            {% trans "For Suppliers" %}
+                        </a>
+                        <a href="{% url 'common:faq' %}?category=account" class="list-group-item list-group-item-action {% if category == 'account' %}active{% endif %}">
+                            {% trans "Account & Security" %}
+                        </a>
+                        <a href="{% url 'common:faq' %}?category=orders" class="list-group-item list-group-item-action {% if category == 'orders' %}active{% endif %}">
+                            {% trans "Orders & Deliveries" %}
+                        </a>
+                        <a href="{% url 'common:faq' %}?category=payments" class="list-group-item list-group-item-action {% if category == 'payments' %}active{% endif %}">
+                            {% trans "Payments & Billing" %}
+                        </a>
+                        <a href="{% url 'common:faq' %}?category=technical" class="list-group-item list-group-item-action {% if category == 'technical' %}active{% endif %}">
+                            {% trans "Technical Support" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ Accordion -->
+        <div class="col-lg-9">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        {% if search_query %}
+                            {% trans "Search results for" %}: "{{ search_query }}"
+                        {% elif category %}
+                            {{ category_display }}
+                        {% else %}
+                            {% trans "All FAQs" %}
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="faqAccordion">
+                        {% for faq in faqs %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
+                                        {{ faq.question }}
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#faqAccordion">
+                                    <div class="accordion-body">
+                                        {{ faq.answer|linebreaks }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                <h4 class="mb-1">{% trans "No FAQs found" %}</h4>
+                                <p class="mb-4">{% trans "We couldn't find any FAQs matching your search criteria" %}</p>
+                                {% if search_query or category %}
+                                    <a href="{% url 'common:faq' %}" class="btn btn-primary">
+                                        <i class="fas fa-undo me-2"></i>{% trans "View All FAQs" %}
+                                    </a>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Still Have Questions -->
+    <div class="my-5">
+        <div class="card bg-light shadow-sm">
+            <div class="card-body p-4 p-md-5 text-center">
+                <h2 class="mb-4">{% trans "Still Have Questions?" %}</h2>
+                <p class="lead mb-4">{% trans "Can't find what you're looking for? Feel free to contact our support team." %}</p>
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body p-4 text-center">
+                                        <div class="mb-3">
+                                            <i class="fas fa-envelope fa-3x text-primary"></i>
+                                        </div>
+                                        <h4 class="h5 mb-3">{% trans "Email Support" %}</h4>
+                                        <p class="mb-3">{% trans "Send us a message and we'll respond within 24 hours" %}</p>
+                                        <a href="mailto:support@lidhjebiznesi.com" class="btn btn-outline-primary">
+                                            <i class="fas fa-paper-plane me-2"></i>{% trans "Email Us" %}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body p-4 text-center">
+                                        <div class="mb-3">
+                                            <i class="fas fa-headset fa-3x text-primary"></i>
+                                        </div>
+                                        <h4 class="h5 mb-3">{% trans "Live Support" %}</h4>
+                                        <p class="mb-3">{% trans "Get immediate assistance from our support team" %}</p>
+                                        <a href="{% url 'common:contact' %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-comments me-2"></i>{% trans "Contact Us" %}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get hash from URL
+        const hash = window.location.hash;
+        
+        // If hash exists, open corresponding accordion item
+        if (hash) {
+            const targetAccordion = document.querySelector(hash);
+            if (targetAccordion) {
+                // Close all accordion items
+                const accordionItems = document.querySelectorAll('.accordion-collapse');
+                accordionItems.forEach(item => {
+                    item.classList.remove('show');
+                });
+                
+                // Open target accordion item
+                targetAccordion.classList.add('show');
+                
+                // Scroll to target
+                setTimeout(function() {
+                    targetAccordion.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }, 100);
+            }
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

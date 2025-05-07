@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Order" %} #{{ order.id }} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    {% if user.is_supplier %}
+                        <li class="breadcrumb-item"><a href="{% url 'suppliers:order_list' %}">{% trans "Orders" %}</a></li>
+                    {% elif user.is_shop %}
+                        <li class="breadcrumb-item"><a href="{% url 'shops:order_list' %}">{% trans "Orders" %}</a></li>
+                    {% endif %}
+                    <li class="breadcrumb-item active" aria-current="page">{% trans "Order" %} #{{ order.id }}</li>
+                </ol>
+            </nav>
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3">{% trans "Order" %} #{{ order.id }}</h1>
+                <div>
+                    {% if user.is_supplier %}
+                        <a href="{% url 'suppliers:order_list' %}" class="btn btn-outline-secondary">
+                            <i class="fa fa-arrow-left me-2"></i> {% trans "Back to Orders" %}
+                        </a>
+                    {% elif user.is_shop %}
+                        <a href="{% url 'shops:order_list' %}" class="btn btn-outline-secondary">
+                            <i class="fa fa-arrow-left me-2"></i> {% trans "Back to Orders" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Status and Actions -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">{% trans "Status" %}</h5>
+                            <span class="badge {% if order.status == 'DRAFT' or order.status == 'SUBMITTED' %}bg-secondary{% elif order.status == 'CONFIRMED' or order.status == 'PROCESSING' %}bg-primary{% elif order.status == 'READY' or order.status == 'DELIVERING' %}bg-info{% elif order.status == 'DELIVERED' %}bg-success{% else %}bg-danger{% endif %} fs-6">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        <div>
+                            <p class="mb-1 text-muted">{% trans "Created" %}</p>
+                            <p class="mb-0 fw-bold">{{ order.created_at|date:"j F Y, H:i" }}</p>
+                        </div>
+                        
+                        {% if order.submitted_at %}
+                        <div>
+                            <p class="mb-1 text-muted">{% trans "Submitted" %}</p>
+                            <p class="mb-0 fw-bold">{{ order.submitted_at|date:"j F Y, H:i" }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        {% if order.delivery_date %}
+                        <div>
+                            <p class="mb-1 text-muted">{% trans "Delivery Date" %}</p>
+                            <p class="mb-0 fw-bold">{{ order.delivery_date|date:"j F Y" }}
+                                {% if order.delivery_time_window %}
+                                    <span class="text-muted">({{ order.delivery_time_window }})</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="mb-3">{% trans "Actions" %}</h5>
+                    <div class="d-grid gap-2">
+                        {% if user.is_shop %}
+                            {% if order.status == 'DRAFT' %}
+                                <a href="{% url 'shops:order_submit' order.id %}" class="btn btn-primary">
+                                    <i class="fa fa-paper-plane me-2"></i> {% trans "Submit Order" %}
+                                </a>
+                                <a href="{% url 'shops:order_edit' order.id %}" class="btn btn-outline-primary">
+                                    <i class="fa fa-edit me-2"></i> {% trans "Edit Order" %}
+                                </a>
+                            {% endif %}
+                            
+                            {% if order.status == 'SUBMITTED' or order.status == 'CONFIRMED' %}
+                                <a href="{% url 'shops:order_cancel' order.id %}" class="btn btn-outline-danger">
+                                    <i class="fa fa-times me-2"></i> {% trans "Cancel Order" %}
+                                </a>
+                            {% endif %}
+                            
+                            <a href="{% url 'shops:order_reorder' order.id %}" class="btn btn-outline-secondary">
+                                <i class="fa fa-copy me-2"></i> {% trans "Reorder" %}
+                            </a>
+                        {% endif %}
+                        
+                        {% if user.is_supplier and status_form %}
+                            <form method="post" action="{% url 'suppliers:order_status_update' order.id %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="status" class="form-label">{% trans "Update Status" %}</label>
+                                    {{ status_form.status }}
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fa fa-save me-2"></i> {% trans "Update Status" %}
+                                </button>
+                            </form>
+                        {% endif %}
+                        
+                        <a href="#" class="btn btn-outline-secondary" onclick="window.print()">
+                            <i class="fa fa-print me-2"></i> {% trans "Print Order" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details -->
+    <div class="row">
+        <!-- Order Items -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Order Items" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>{% trans "Product" %}</th>
+                                    <th class="text-center">{% trans "Quantity" %}</th>
+                                    <th class="text-end">{% trans "Unit Price" %}</th>
+                                    <th class="text-end">{% trans "Total" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in order_items %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if item.product.image %}
+                                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="bg-light d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                                                        <i class="fa fa-box text-muted"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <div>
+                                                    <p class="mb-0 fw-bold">{{ item.product.name }}</p>
+                                                    <small class="text-muted">{{ item.product.sku }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">{{ item.quantity }} {{ item.product.unit }}</td>
+                                        <td class="text-end">{{ item.unit_price }} Lekë</td>
+                                        <td class="text-end fw-bold">{{ item.total_price }} Lekë</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold">{% trans "Total" %}</td>
+                                    <td class="text-end fw-bold">{{ order.total_amount }} Lekë</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Order Info -->
+        <div class="col-md-4 mb-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Shop Information" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if order.shop.logo %}
+                            <img src="{{ order.shop.logo.url }}" alt="{{ order.shop.name }}" class="me-3" style="width: 48px; height: 48px; object-fit: contain;">
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                <i class="fa fa-store fa-lg text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h5 class="mb-0">{{ order.shop.name }}</h5>
+                            <p class="mb-0 text-muted">{{ order.shop.shop_type }}</p>
+                        </div>
+                    </div>
+                    
+                    <p class="mb-1"><strong>{% trans "Address" %}:</strong></p>
+                    <p class="mb-3">{{ order.shop.address }}, {{ order.shop.city }}, {{ order.shop.country }}</p>
+                    
+                    <p class="mb-1"><strong>{% trans "Contact" %}:</strong></p>
+                    <p class="mb-0">{{ order.shop.admin.get_full_name }}</p>
+                    <p class="mb-0">{{ order.shop.phone }}</p>
+                    <p class="mb-0">{{ order.shop.admin.email }}</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Supplier Information" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if order.supplier.logo %}
+                            <img src="{{ order.supplier.logo.url }}" alt="{{ order.supplier.name }}" class="me-3" style="width: 48px; height: 48px; object-fit: contain;">
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                                <i class="fa fa-building fa-lg text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h5 class="mb-0">{{ order.supplier.name }}</h5>
+                            <p class="mb-0 text-muted">{{ order.supplier.supplier_type }}</p>
+                        </div>
+                    </div>
+                    
+                    <p class="mb-1"><strong>{% trans "Address" %}:</strong></p>
+                    <p class="mb-3">{{ order.supplier.address }}, {{ order.supplier.city }}, {{ order.supplier.country }}</p>
+                    
+                    <p class="mb-1"><strong>{% trans "Contact" %}:</strong></p>
+                    <p class="mb-0">{{ order.supplier.admin.get_full_name }}</p>
+                    <p class="mb-0">{{ order.supplier.phone }}</p>
+                    <p class="mb-0">{{ order.supplier.admin.email }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notes -->
+    {% if order.notes %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Order Notes" %}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ order.notes }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

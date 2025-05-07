@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{{ product.name }} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'users:dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'products:product_list' %}">{% trans "Products" %}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+                </ol>
+            </nav>
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3">{{ product.name }}</h1>
+                <div>
+                    <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
+                        <i class="fa fa-arrow-left me-2"></i> {% trans "Back to Products" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Detail -->
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-5 mb-4">
+            <div class="card">
+                <div class="card-body p-0">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" class="img-fluid rounded" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 300px;">
+                            <i class="fa fa-box fa-5x text-muted"></i>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Product Info -->
+        <div class="col-md-7 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{% trans "Product Information" %}</h5>
+                    <div>
+                        {% if product.is_available %}
+                            <span class="badge bg-success">{% trans "Available" %}</span>
+                        {% else %}
+                            <span class="badge bg-danger">{% trans "Not Available" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h2 class="h4">{{ product.name }}</h2>
+                        <p class="text-muted">{{ product.supplier.name }}</p>
+                        <div class="d-flex align-items-center mb-3">
+                            <h3 class="text-primary mb-0">{{ product.get_formatted_price }}</h3>
+                            <span class="ms-3 badge bg-light text-dark">{{ product.unit }}</span>
+                        </div>
+                        <p>{{ product.description }}</p>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>{% trans "Category" %}:</strong></p>
+                            <p>{{ product.category.name|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>{% trans "SKU" %}:</strong></p>
+                            <p>{{ product.sku }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>{% trans "Barcode" %}:</strong></p>
+                            <p>{{ product.barcode|default:"-" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>{% trans "Min. Order Quantity" %}:</strong></p>
+                            <p>{{ product.min_order_quantity }} {{ product.unit }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if user.is_shop %}
+                    <hr>
+                    
+                    <!-- Add to Cart Form (for shop users) -->
+                    <form method="post" action="{% url 'shops:cart_add' %}" class="mt-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="quantity" class="form-label">{% trans "Quantity" %}</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="quantity" name="quantity" 
+                                           min="{{ product.min_order_quantity }}" step="0.01" value="{{ product.min_order_quantity }}" required>
+                                    <span class="input-group-text">{{ product.unit }}</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100" {% if not product.is_available %}disabled{% endif %}>
+                                    <i class="fa fa-shopping-cart me-2"></i> {% trans "Add to Cart" %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Additional Information -->
+    <div class="row">
+        <!-- Supplier Information -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Supplier Information" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if product.supplier.logo %}
+                            <img src="{{ product.supplier.logo.url }}" alt="{{ product.supplier.name }}" class="me-3" style="width: 64px; height: 64px; object-fit: contain;">
+                        {% else %}
+                            <div class="bg-light d-flex align-items-center justify-content-center me-3" style="width: 64px; height: 64px;">
+                                <i class="fa fa-building fa-2x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h5 class="mb-1">{{ product.supplier.name }}</h5>
+                            <p class="mb-0 text-muted">{{ product.supplier.city }}, {{ product.supplier.country }}</p>
+                        </div>
+                    </div>
+                    
+                    <p>{{ product.supplier.description|truncatechars:150 }}</p>
+                    
+                    {% if user.is_shop %}
+                    <div class="mt-3">
+                        <a href="{% url 'shops:supplier_detail' product.supplier.id %}" class="btn btn-outline-primary">
+                            <i class="fa fa-info-circle me-2"></i> {% trans "View Supplier" %}
+                        </a>
+                        <a href="{% url 'shops:supplier_catalog' product.supplier.id %}" class="btn btn-outline-secondary ms-2">
+                            <i class="fa fa-list me-2"></i> {% trans "View Catalog" %}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Related Products -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Related Products" %}</h5>
+                </div>
+                <div class="card-body">
+                    {% if related_products %}
+                        <div class="list-group">
+                            {% for related in related_products %}
+                                <a href="{% url 'products:product_detail' related.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ related.name }}</h6>
+                                            <small class="text-muted">{{ related.category.name|default:"-" }}</small>
+                                        </div>
+                                        <span class="badge bg-primary">{{ related.get_formatted_price }}</span>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fa fa-box-open fa-3x text-muted mb-3"></i>
+                            <p class="mb-0">{% trans "No related products found" %}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

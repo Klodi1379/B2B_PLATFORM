@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Today's Deliveries" %} | Lidhje Biznesi{% endblock %}
+
+{% block extra_css %}
+<style>
+    .route-map {
+        height: 400px;
+        width: 100%;
+        border-radius: 0.25rem;
+    }
+    .stop-status-pending {
+        border-left: 4px solid #6c757d;
+    }
+    .stop-status-in-progress {
+        border-left: 4px solid #0d6efd;
+    }
+    .stop-status-completed {
+        border-left: 4px solid #198754;
+    }
+    .stop-status-cancelled {
+        border-left: 4px solid #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'delivery:driver_dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% trans "Today's Deliveries" %}</li>
+                </ol>
+            </nav>
+            <h1 class="h3">{% trans "Today's Deliveries" %}</h1>
+            <p class="text-muted">{% trans "Manage your delivery stops for today" %}</p>
+        </div>
+    </div>
+
+    <!-- Delivery Plan Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if plan %}
+                        <div class="row">
+                            <div class="col-md-3 text-center border-end">
+                                <h6 class="text-muted mb-1">{% trans "Plan" %}</h6>
+                                <h4 class="mb-0">{{ plan.name }}</h4>
+                            </div>
+                            <div class="col-md-3 text-center border-end">
+                                <h6 class="text-muted mb-1">{% trans "Date" %}</h6>
+                                <h4 class="mb-0">{{ plan.date|date:"j F Y" }}</h4>
+                            </div>
+                            <div class="col-md-3 text-center border-end">
+                                <h6 class="text-muted mb-1">{% trans "Stops" %}</h6>
+                                <h4 class="mb-0">{{ total_count }}</h4>
+                            </div>
+                            <div class="col-md-3 text-center">
+                                <h6 class="text-muted mb-1">{% trans "Progress" %}</h6>
+                                <h4 class="mb-0">{{ completed_count }} / {{ total_count }}</h4>
+                            </div>
+                        </div>
+                        
+                        <div class="progress mt-3" style="height: 10px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress_percentage }}%;" 
+                                 aria-valuenow="{{ progress_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                {{ progress_percentage|floatformat:0 }}%
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fa fa-truck fa-3x text-muted mb-3"></i>
+                            <h5>{% trans "No Delivery Plan Assigned" %}</h5>
+                            <p class="text-muted">{% trans "You don't have any delivery plan assigned for today." %}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if plan %}
+    <div class="row">
+        <!-- Delivery Stops List -->
+        <div class="col-md-5 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{% trans "Delivery Stops" %}</h5>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" id="refreshStops">
+                            <i class="fa fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush" id="stopsContainer">
+                        {% if stops %}
+                            {% for stop in stops %}
+                                <div class="list-group-item list-group-item-action stop-status-{{ stop.status|lower }}">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div>
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge bg-secondary me-2">{{ forloop.counter }}</span>
+                                                <h5 class="mb-1">{{ stop.shop.name }}</h5>
+                                            </div>
+                                            <p class="mb-1 small text-muted">{{ stop.shop.address }}</p>
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge {% if stop.status == 'PENDING' %}bg-secondary{% elif stop.status == 'IN_PROGRESS' %}bg-primary{% elif stop.status == 'COMPLETED' %}bg-success{% else %}bg-danger{% endif %} me-2">
+                                                    {{ stop.get_status_display }}
+                                                </span>
+                                                <small class="text-muted">{{ stop.order_count }} {% trans "orders" %}</small>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <a href="{% url 'delivery:stop_detail' stop.id %}" class="btn btn-sm btn-outline-primary mb-1 d-block">
+                                                <i class="fa fa-eye"></i>
+                                            </a>
+                                            {% if stop.status == 'PENDING' %}
+                                                <a href="{% url 'delivery:stop_status_update' stop.id %}?status=IN_PROGRESS" class="btn btn-sm btn-outline-primary mb-1 d-block">
+                                                    <i class="fa fa-play"></i>
+                                                </a>
+                                            {% elif stop.status == 'IN_PROGRESS' %}
+                                                <a href="{% url 'delivery:stop_status_update' stop.id %}?status=COMPLETED" class="btn btn-sm btn-outline-success d-block">
+                                                    <i class="fa fa-check"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fa fa-map-marker-alt fa-3x text-muted mb-3"></i>
+                                <p class="mb-0">{% trans "No stops in this delivery plan" %}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    {% if plan and not plan.is_completed and completed_count == total_count and total_count > 0 %}
+                        <a href="{% url 'delivery:plan_complete' plan.id %}" class="btn btn-success w-100">
+                            <i class="fa fa-check-circle me-2"></i> {% trans "Complete Delivery Plan" %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Map View -->
+        <div class="col-md-7 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Route Map" %}</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="routeMap" class="route-map"></div>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <small class="d-block text-muted">{% trans "Total Distance" %}</small>
+                            <strong>{{ plan.total_distance|default:"0" }} km</strong>
+                        </div>
+                        <div class="col-4">
+                            <small class="d-block text-muted">{% trans "Estimated Time" %}</small>
+                            <strong>{{ plan.estimated_time|default:"0" }} min</strong>
+                        </div>
+                        <div class="col-4">
+                            <small class="d-block text-muted">{% trans "Remaining Stops" %}</small>
+                            <strong>{% with remaining=total_count|add:"-completed_count" %}{{ remaining }}{% endwith %} / {{ total_count }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize map if Google Maps API key is provided
+        if (typeof google !== 'undefined') {
+            initMap();
+        }
+        
+        // Set up refresh button
+        document.getElementById('refreshStops').addEventListener('click', function() {
+            location.reload();
+        });
+    });
+    
+    function initMap() {
+        // Create map
+        window.map = new google.maps.Map(document.getElementById('routeMap'), {
+            zoom: 12,
+            center: { lat: 41.3275, lng: 19.8187 }, // Default to Tirana, Albania
+        });
+        
+        // Add markers for each stop
+        const stops = [
+            {% for stop in stops %}
+            {
+                id: {{ stop.id }},
+                position: { lat: {{ stop.shop.latitude|default:"41.3275" }}, lng: {{ stop.shop.longitude|default:"19.8187" }} },
+                title: "{{ stop.shop.name }}",
+                status: "{{ stop.status }}",
+                order: {{ forloop.counter }}
+            },
+            {% endfor %}
+        ];
+        
+        const bounds = new google.maps.LatLngBounds();
+        const markers = [];
+        
+        // Add markers to map
+        stops.forEach(function(stop) {
+            const marker = new google.maps.Marker({
+                position: stop.position,
+                map: map,
+                title: stop.title,
+                label: stop.order.toString(),
+                icon: getMarkerIcon(stop.status)
+            });
+            
+            // Add info window
+            const infoWindow = new google.maps.InfoWindow({
+                content: `
+                    <div style="max-width: 200px;">
+                        <h6 style="margin-bottom: 5px;">${stop.title}</h6>
+                        <p style="margin-bottom: 5px; font-size: 12px;">Stop #${stop.order}</p>
+                        <p style="margin-bottom: 0; font-size: 12px;">
+                            Status: <span style="font-weight: bold;">${getStatusText(stop.status)}</span>
+                        </p>
+                    </div>
+                `
+            });
+            
+            marker.addListener('click', function() {
+                infoWindow.open(map, marker);
+            });
+            
+            markers.push(marker);
+            bounds.extend(stop.position);
+        });
+        
+        // Fit map to bounds if we have stops
+        if (stops.length > 0) {
+            map.fitBounds(bounds);
+        }
+        
+        // Draw route if we have more than one stop
+        if (stops.length > 1) {
+            drawRoute(stops);
+        }
+    }
+    
+    function getMarkerIcon(status) {
+        // Return different colored markers based on status
+        let color = 'gray';
+        
+        switch(status) {
+            case 'PENDING':
+                color = 'gray';
+                break;
+            case 'IN_PROGRESS':
+                color = 'blue';
+                break;
+            case 'COMPLETED':
+                color = 'green';
+                break;
+            case 'CANCELLED':
+                color = 'red';
+                break;
+        }
+        
+        return {
+            path: google.maps.SymbolPath.CIRCLE,
+            fillColor: color,
+            fillOpacity: 0.9,
+            strokeWeight: 1,
+            strokeColor: '#ffffff',
+            scale: 10
+        };
+    }
+    
+    function getStatusText(status) {
+        switch(status) {
+            case 'PENDING':
+                return 'Pending';
+            case 'IN_PROGRESS':
+                return 'In Progress';
+            case 'COMPLETED':
+                return 'Completed';
+            case 'CANCELLED':
+                return 'Cancelled';
+            default:
+                return status;
+        }
+    }
+    
+    function drawRoute(stops) {
+        // Create DirectionsService
+        const directionsService = new google.maps.DirectionsService();
+        const directionsRenderer = new google.maps.DirectionsRenderer({
+            map: map,
+            suppressMarkers: true, // We already have our own markers
+            polylineOptions: {
+                strokeColor: '#0d6efd',
+                strokeWeight: 5,
+                strokeOpacity: 0.7
+            }
+        });
+        
+        // Build waypoints
+        const waypoints = stops.slice(1, -1).map(stop => ({
+            location: stop.position,
+            stopover: true
+        }));
+        
+        // Request directions
+        directionsService.route({
+            origin: stops[0].position,
+            destination: stops[stops.length - 1].position,
+            waypoints: waypoints,
+            optimizeWaypoints: false,
+            travelMode: google.maps.TravelMode.DRIVING
+        }, function(response, status) {
+            if (status === 'OK') {
+                directionsRenderer.setDirections(response);
+            } else {
+                console.error('Directions request failed due to ' + status);
+            }
+        });
+    }
+</script>
+{% endblock %}

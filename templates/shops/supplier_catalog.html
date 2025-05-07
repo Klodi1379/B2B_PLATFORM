@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{{ supplier.name }} - Katalogu | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Supplier Info Header -->
+    <div class="card mb-4">
+        <div class="card-header p-0">
+            <div class="bg-primary bg-gradient text-white p-4" style="height: 120px;"></div>
+        </div>
+        <div class="card-body position-relative px-4 pb-4">
+            <div class="d-flex flex-column flex-md-row align-items-md-end mt-n5 mb-3">
+                <div class="bg-white rounded-3 border border-3 border-white shadow-sm me-md-4 mb-3 mb-md-0" style="width: 100px; height: 100px;">
+                    {% if supplier.logo %}
+                        <img class="w-100 h-100 rounded-3 object-fit-cover" src="{{ supplier.logo.url }}" alt="{{ supplier.name }}">
+                    {% else %}
+                        <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-primary text-white rounded-3 fs-3 fw-bold">
+                            {{ supplier.name|slice:":2"|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1">
+                    <h1 class="h3 mb-1">{{ supplier.name }}</h1>
+                    <div class="d-flex flex-wrap text-muted small">
+                        <div class="me-3 mb-2">
+                            <i class="fa fa-map-marker-alt me-1"></i>
+                            <span>{{ supplier.address|default:"Pa adresë" }}</span>
+                        </div>
+                        <div class="me-3 mb-2">
+                            <i class="fa fa-phone me-1"></i>
+                            <span>{{ supplier.phone|default:"Pa telefon" }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 mt-md-0">
+                    <!-- If not connected, show connect button -->
+                    {% if not is_connected %}
+                        <a href="{% url 'shops:supplier_add' %}?supplier_id={{ supplier.id }}"
+                           class="btn btn-primary">
+                            <i class="fa fa-link me-2"></i> Lidhu me Furnitorin
+                        </a>
+                    {% else %}
+                        <span class="badge bg-success d-inline-flex align-items-center p-2">
+                            <i class="fa fa-check me-1"></i> I lidhur
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <p>{{ supplier.description|default:"Pa përshkrim" }}</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex justify-content-md-end">
+                        {% for category in supplier.categories.all %}
+                            <span class="badge bg-light text-dark me-1">{{ category.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Catalog Content -->
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card sticky-top" style="top: 20px; z-index: 1;">
+                <div class="card-header">
+                    <h5 class="mb-0">Filtro Produktet</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{% url 'shops:supplier_catalog' supplier.id %}">
+                        <!-- Search -->
+                        <div class="mb-3">
+                            <label for="search" class="form-label">Kërko</label>
+                            <input type="text" class="form-control" id="search" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Emri i produktit...">
+                        </div>
+
+                        <!-- Categories -->
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Kategoria</label>
+                            <select class="form-select" id="category" name="category">
+                                <option value="">Të gjitha kategoritë</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"i" %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="mb-3">
+                            <label class="form-label">Çmimi</label>
+                            <div class="row g-2">
+                                <div class="col">
+                                    <input type="number" class="form-control" name="min_price" value="{{ request.GET.min_price|default:'' }}" placeholder="Min" min="0">
+                                </div>
+                                <div class="col">
+                                    <input type="number" class="form-control" name="max_price" value="{{ request.GET.max_price|default:'' }}" placeholder="Max" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Availability -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="available_only" name="available_only" value="1" {% if request.GET.available_only %}checked{% endif %}>
+                                <label class="form-check-label" for="available_only">
+                                    Vetëm produktet e disponueshme
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Sort -->
+                        <div class="mb-3">
+                            <label for="sort" class="form-label">Rendit sipas</label>
+                            <select class="form-select" id="sort" name="sort">
+                                <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Emri (A-Z)</option>
+                                <option value="-name" {% if request.GET.sort == '-name' %}selected{% endif %}>Emri (Z-A)</option>
+                                <option value="price" {% if request.GET.sort == 'price' %}selected{% endif %}>Çmimi (Ulët-Lart)</option>
+                                <option value="-price" {% if request.GET.sort == '-price' %}selected{% endif %}>Çmimi (Lart-Ulët)</option>
+                                <option value="-created_at" {% if request.GET.sort == '-created_at' %}selected{% endif %}>Më të rejat</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-filter me-2"></i> Filtro
+                            </button>
+                            <a href="{% url 'shops:supplier_catalog' supplier.id %}" class="btn btn-outline-secondary">
+                                <i class="fa fa-times me-2"></i> Pastro
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h4 mb-0">Produktet ({{ products.paginator.count }})</h2>
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'shops:cart_view' %}" class="btn btn-outline-primary me-2">
+                        <i class="fa fa-shopping-cart me-1"></i> Shiko Karrocën
+                        {% if cart_count > 0 %}
+                            <span class="badge bg-primary ms-1">{{ cart_count }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+
+            {% if products %}
+                <div class="row">
+                    {% for product in products %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="position-relative">
+                                    {% if product.image %}
+                                        <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}" style="height: 180px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-light d-flex align-items-center justify-content-center" style="height: 180px;">
+                                            <i class="fa fa-box fa-3x text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                    {% if not product.is_available %}
+                                        <div class="position-absolute top-0 end-0 m-2">
+                                            <span class="badge bg-danger">Jo i disponueshëm</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">{{ product.name }}</h5>
+                                    <p class="card-text text-muted small mb-2">{{ product.category.name|default:"Pa kategori" }}</p>
+                                    <p class="card-text flex-grow-1">{{ product.description|truncatechars:80 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <span class="fw-bold text-primary">{{ product.price }} Lekë</span>
+                                        <span class="badge bg-light text-dark">{{ product.unit }}</span>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent">
+                                    <div class="d-grid gap-2">
+                                        <button type="button" class="btn btn-primary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#addToCartModal{{ product.id }}"
+                                                {% if not product.is_available %}disabled{% endif %}>
+                                            <i class="fa fa-cart-plus me-1"></i> Shto në Karrocë
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Add to Cart Modal -->
+                            <div class="modal fade" id="addToCartModal{{ product.id }}" tabindex="-1" aria-labelledby="addToCartModalLabel{{ product.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <form method="post" action="{% url 'shops:cart_add' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="product_id" value="{{ product.id }}">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="addToCartModalLabel{{ product.id }}">Shto në Karrocë</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label for="quantity{{ product.id }}" class="form-label">Sasia ({{ product.unit }})</label>
+                                                    <input type="number" class="form-control" id="quantity{{ product.id }}" name="quantity"
+                                                           min="{{ product.min_order_quantity }}" step="0.01" value="{{ product.min_order_quantity }}" required>
+                                                    <div class="form-text">
+                                                        Sasia minimale e porosisë: {{ product.min_order_quantity }} {{ product.unit }}
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <span>Çmimi për njësi:</span>
+                                                    <span class="fw-bold">{{ product.price }} Lekë</span>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anulo</button>
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fa fa-cart-plus me-1"></i> Shto në Karrocë
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if products.has_other_pages %}
+                    {% include "partials/pagination.html" with page_obj=products %}
+                {% endif %}
+
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fa fa-box-open fa-3x text-muted mb-3"></i>
+                        <h3 class="h5">Nuk u gjet asnjë produkt</h3>
+                        <p class="text-muted">Nuk ka produkte që përputhen me kriteret e kërkimit tuaj.</p>
+                        <a href="{% url 'shops:supplier_catalog' supplier.id %}" class="btn btn-primary mt-2">
+                            Pastro filtrat
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function updateSortParam(value) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('sort', value);
+        window.location.href = url.toString();
+    }
+</script>
+{% endblock %}

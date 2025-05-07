@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Track Delivery" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'shops:dashboard' %}">{% trans "Dashboard" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'shops:order_list' %}">{% trans "Orders" %}</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'shops:order_detail' order.id %}">{% trans "Order" %} #{{ order.order_number }}</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{% trans "Track Delivery" %}</li>
+                </ol>
+            </nav>
+            <h1 class="h3">{% trans "Track Delivery" %}</h1>
+            <p class="text-muted">{% trans "Track your delivery in real-time" %}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Delivery Map" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> {% trans "Delivery tracking is not yet implemented. This feature will be available soon." %}
+                    </div>
+                    
+                    <div class="bg-light p-5 text-center rounded">
+                        <i class="fas fa-map-marked-alt fa-4x text-muted mb-3"></i>
+                        <h4>{% trans "Map Placeholder" %}</h4>
+                        <p class="text-muted">{% trans "Real-time delivery tracking will be displayed here." %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">{% trans "Delivery Details" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="text-muted small mb-1">{% trans "Order Number" %}</div>
+                        <div class="fw-medium">{{ order.order_number }}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="text-muted small mb-1">{% trans "Delivery Date" %}</div>
+                        <div class="fw-medium">{{ delivery.delivery_date|date:"l, d F Y" }}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="text-muted small mb-1">{% trans "Time Slot" %}</div>
+                        <div class="fw-medium">
+                            {% if delivery.time_slot == 'MORNING' %}
+                                {% trans "Morning (8:00 - 12:00)" %}
+                            {% elif delivery.time_slot == 'AFTERNOON' %}
+                                {% trans "Afternoon (12:00 - 16:00)" %}
+                            {% elif delivery.time_slot == 'EVENING' %}
+                                {% trans "Evening (16:00 - 20:00)" %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="text-muted small mb-1">{% trans "Status" %}</div>
+                        <div>
+                            <span class="badge bg-primary">{{ delivery.get_status_display }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="text-muted small mb-1">{% trans "Delivery Address" %}</div>
+                        <div>{{ order.address }}</div>
+                        <div>{{ order.city }}{% if order.postal_code %}, {{ order.postal_code }}{% endif %}</div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-grid">
+                        <a href="{% url 'shops:order_detail' order.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i> {% trans "Back to Order" %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

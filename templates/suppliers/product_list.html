@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% trans "Product Catalog" %} | Lidhje Biznesi{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3">{% trans "Product Catalog" %}</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'suppliers:product_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>{% trans "Add Product" %}
+            </a>
+            <a href="{% url 'suppliers:catalog_import' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-upload me-2"></i>{% trans "Import Products" %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form class="row g-3" method="get" action="{% url 'suppliers:product_list' %}">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text" name="search" class="form-control" placeholder="{% trans 'Search products...' %}" value="{{ request.GET.search }}">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select name="category" class="form-select">
+                        <option value="">{% trans "All Categories" %}</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">{% trans "All Statuses" %}</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>{% trans "Active" %}</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>{% trans "Inactive" %}</option>
+                        <option value="out_of_stock" {% if request.GET.status == 'out_of_stock' %}selected{% endif %}>{% trans "Out of Stock" %}</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">{% trans "Filter" %}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Product List -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="products-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="80">{% trans "Image" %}</th>
+                            <th>{% trans "Product" %}</th>
+                            <th>{% trans "Category" %}</th>
+                            <th>{% trans "SKU" %}</th>
+                            <th>{% trans "Price" %}</th>
+                            <th>{% trans "Stock" %}</th>
+                            <th>{% trans "Status" %}</th>
+                            <th class="text-end">{% trans "Actions" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                            <tr>
+                                <td>
+                                    {% if product.image %}
+                                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-thumbnail" style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                            <i class="fas fa-box text-secondary"></i>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'suppliers:product_detail' product.id %}" class="text-decoration-none">
+                                        <div class="fw-medium text-dark">{{ product.name }}</div>
+                                        <div class="small text-muted">{{ product.description|truncatechars:50 }}</div>
+                                    </a>
+                                </td>
+                                <td>{{ product.category.name }}</td>
+                                <td>{{ product.sku }}</td>
+                                <td>{{ product.price }} ALL</td>
+                                <td>
+                                    {% if product.stock_quantity <= product.low_stock_threshold %}
+                                        <span class="text-danger">{{ product.stock_quantity }}</span>
+                                    {% else %}
+                                        {{ product.stock_quantity }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if product.is_active %}
+                                        {% if product.stock_quantity <= 0 %}
+                                            <span class="badge bg-danger">{% trans "Out of Stock" %}</span>
+                                        {% elif product.stock_quantity <= product.low_stock_threshold %}
+                                            <span class="badge bg-warning">{% trans "Low Stock" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{% trans "Active" %}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-secondary">{% trans "Inactive" %}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            {% trans "Actions" %}
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'suppliers:product_edit' product.id %}">
+                                                    <i class="fas fa-edit me-2 text-primary"></i>{% trans "Edit" %}
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'suppliers:product_detail' product.id %}">
+                                                    <i class="fas fa-eye me-2 text-info"></i>{% trans "View Details" %}
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#deleteProductModal{{ product.id }}">
+                                                    <i class="fas fa-trash me-2"></i>{% trans "Delete" %}
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <!-- Delete Modal -->
+                                    <div class="modal fade" id="deleteProductModal{{ product.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">{% trans "Confirm Deletion" %}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>{% trans "Are you sure you want to delete this product?" %}</p>
+                                                    <p class="fw-bold">{{ product.name }}</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                                                    <form method="post" action="{% url 'suppliers:product_delete' product.id %}">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-danger">{% trans "Delete" %}</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="8" class="text-center py-5">
+                                    <div class="py-4">
+                                        <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                                        <p class="mb-1">{% trans "No products found" %}</p>
+                                        <p class="text-muted">{% trans "Add your first product to start selling" %}</p>
+                                        <a href="{% url 'suppliers:product_create' %}" class="btn btn-primary mt-2">
+                                            <i class="fas fa-plus me-2"></i>{% trans "Add Product" %}
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-white">
+            {% include 'partials/pagination.html' with page_obj=products %}
+        </div>
+    </div>
+</div>
+{% endblock %}
