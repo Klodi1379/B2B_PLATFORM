@@ -1,0 +1,16 @@
+Django>=5.0.7
+python-decouple>=3.8
+celery>=5.5.2
+redis>=4.5.0
+Pillow>=11.2.1
+requests>=2.31.0
+gunicorn>=21.2.0
+crispy-bootstrap5>=0.7
+django-crispy-forms>=2.0
+django-filter>=23.2
+django-mathfilters>=1.0.0
+django-widget-tweaks>=1.5.0
+djangorestframework>=3.14.0
+Markdown>=3.5
+pytz>=2025.2
+PyYAML>=6.0.2

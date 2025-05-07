@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    restart: always
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - ./:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    ports:
+      - "8000:8000"
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    volumes:
+      - redis_data:/data
+
+  celery:
+    build: .
+    restart: always
+    command: celery -A lidhje_biznesi worker -l info
+    volumes:
+      - ./:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    env_file:
+      - .env
+    depends_on:
+      - web
+      - redis
+
+  celery-beat:
+    build: .
+    restart: always
+    command: celery -A lidhje_biznesi beat -l info
+    volumes:
+      - ./:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    env_file:
+      - .env
+    depends_on:
+      - web
+      - redis
+      - celery
+
+volumes:
+  static_volume:
+  media_volume:
+  redis_data:
